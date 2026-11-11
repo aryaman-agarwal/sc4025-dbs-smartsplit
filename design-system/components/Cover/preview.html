@@ -1,0 +1,35 @@
+<!-- @dsCard height=300 -->
+<!doctype html><html><head><style>
+body{margin:0;background:var(--card);font-family:var(--font-sans)}
+.wrap{position:relative;width:960px;height:300px;overflow:hidden}
+svg{position:absolute;left:480px;top:0}
+.b-strong{fill:var(--brand-strong)}.b-deep{fill:var(--brand-deep)}.b-ink{fill:var(--ink)}.b-soft{fill:var(--brand-soft)}.b-card{fill:var(--card)}
+.r-md{rx:var(--radius-md)}.r-lg{rx:var(--radius-lg)}
+.disc{stroke:var(--brand-strong);stroke-width:4}
+.txt{position:absolute;left:40px;bottom:36px;max-width:420px}
+.name{font-size:72px;line-height:.95;font-weight:700;color:var(--ink);margin:0;letter-spacing:-.02em}
+.tag{font-size:14px;line-height:20px;color:var(--muted);margin:16px 0 0}
+</style></head><body><div class="wrap">
+<!--
+blocks: brand-strong 304×196 (radius-lg) · brand-deep 152×120 · ink 152×156 (radius-lg) · brand-soft 304×88 (radius-md)
+arrangement: one tall red slab with satellites, deep red and ink bleeding off the top and right edges, pink tint strip under the slab
+pattern: overlapping discs, the avatar stack and the app's round quick-action discs, because splitting is about people side by side
+scales: gaps space-4 (16), disc r 24 (radius-lg) stepping 32 (space-8) so each overlaps by space-4; corners radius-md / radius-lg
+-->
+<svg width="480" height="300" viewBox="0 0 480 300" aria-hidden="true">
+ <rect class="b-strong r-lg" x="0" y="-24" width="304" height="220"/>
+ <rect class="b-deep" x="320" y="-1" width="161" height="121"/>
+ <rect class="b-ink r-lg" x="320" y="136" width="184" height="188"/>
+ <rect class="b-soft r-md" x="0" y="212" width="304" height="100"/>
+ <g>
+  <circle class="b-soft disc" cx="56" cy="128" r="24"/>
+  <circle class="b-card disc" cx="88" cy="128" r="24"/>
+  <circle class="b-soft disc" cx="120" cy="128" r="24"/>
+  <circle class="b-deep disc" cx="152" cy="128" r="24"/>
+  <circle class="b-ink disc" cx="184" cy="128" r="24"/>
+ </g>
+ <circle class="b-strong" cx="384" cy="232" r="24"/>
+ <circle class="b-soft" cx="416" cy="232" r="24"/>
+</svg>
+<div class="txt"><p class="name">DBS<br>SmartSplit</p><p class="tag">Split a bill, settle in one tap, pre-fund a trip. Nobody holds anyone's money.</p></div>
+</div></body></html>

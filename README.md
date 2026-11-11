@@ -73,6 +73,10 @@ src/
 - **Pluggable OCR.** Screens call the `ReceiptParser` interface. The mock returns demo receipts; a real model (vision LLM, Donut, LayoutLM) can be added as a new class without touching the UI.
 - **Scam-aware settlement.** Masked payee names, no phone or account field, first-time payee warning, reminders only in-app with no external links.
 
+## Design system
+
+[`design-system/`](design-system/README.md) holds the SmartSplit design system: tokens (`tokens.json`), a brand book (writing, visuals, icons) and 15 components with usage notes and previews. It was built from this code and restyled after the current DBS digibank app. Its "Not synced" section lists the colour changes still to bring into `src/index.css` and `src/data/seed.ts`.
+
 ## Tests
 
 `npm test` runs 52 tests:

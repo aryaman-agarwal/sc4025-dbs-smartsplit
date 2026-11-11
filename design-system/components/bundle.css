@@ -1,0 +1,90 @@
+/* DBS SmartSplit components. Hand-written from src/components/ui.tsx, restyled after the DBS digibank app. Uses tokens.css variables only. */
+.ss{font-family:var(--font-sans);color:var(--ink);-webkit-font-smoothing:antialiased;box-sizing:border-box}
+.ss *,.ss *::before,.ss *::after{box-sizing:border-box}
+.ss-num{font-variant-numeric:tabular-nums}
+/* Button */
+.ss-btn{display:inline-flex;align-items:center;justify-content:center;gap:var(--space-2);border:1px solid transparent;cursor:pointer;font:inherit;font-size:15px;line-height:20px;font-weight:700;padding:14px var(--space-4);border-radius:var(--radius-sm);transition:background .15s}
+.ss-btn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.ss-btn--primary{background:var(--brand-strong);color:var(--on-brand);text-transform:uppercase;letter-spacing:.04em}
+.ss-btn--primary:hover{background:var(--brand-deep)}
+.ss-btn--primary:disabled{background:var(--disabled);cursor:not-allowed}
+.ss-btn--secondary{background:var(--card);color:var(--ink);border-color:var(--line);text-transform:uppercase;letter-spacing:.04em}
+.ss-btn--secondary:hover{background:var(--surface)}
+.ss-btn--link{background:none;color:var(--brand-strong);font-size:14px;font-weight:600;padding:var(--space-1) 0}
+.ss-btn--link:hover{text-decoration:underline}
+.ss-btn--pill{background:var(--card);color:var(--brand-strong);border-color:var(--brand-strong);border-radius:var(--radius-full);font-size:12px;line-height:16px;padding:5px 12px;text-transform:uppercase;letter-spacing:.04em}
+.ss-btn--pill:hover{background:var(--brand-soft)}
+.ss-btn--block{width:100%}
+/* Card */
+.ss-card{display:block;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:var(--radius-md);padding:var(--space-4);box-shadow:var(--shadow-card);font:inherit;color:inherit}
+button.ss-card{cursor:pointer}button.ss-card:hover{background:var(--sheet)}
+.ss-card__title{display:flex;align-items:center;gap:var(--space-2);font-size:18px;line-height:24px;font-weight:600;color:var(--ink-2);margin:0}
+.ss-card__meta{font-size:12px;line-height:16px;color:var(--muted);text-align:right;margin-top:var(--space-3)}
+.ss-card__amount{text-align:right}
+/* Money */
+.ss-money{white-space:nowrap}
+.ss-money__ccy{color:var(--subtle);font-weight:400;margin-right:.3em;font-size:.67em}
+.ss-money--lg{font-size:24px;line-height:32px;font-weight:700}
+.ss-money--md{font-size:16px;line-height:24px;font-weight:700}
+.ss-money--sm{font-size:14px;line-height:20px;font-weight:600}
+.ss-money--sm .ss-money__ccy,.ss-money--md .ss-money__ccy{font-size:1em;color:var(--muted)}
+/* Badge */
+.ss-chip{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 6px;border-radius:var(--radius-full);background:var(--chip);color:var(--ink-2);font-size:12px;font-weight:600}
+.ss-new{display:inline-block;border-radius:var(--radius-full);background:var(--brand-strong);color:var(--on-brand);font-size:10px;line-height:14px;font-weight:700;padding:1px 6px;letter-spacing:.04em}
+.ss-dot{display:inline-block;width:8px;height:8px;border-radius:var(--radius-full);background:var(--brand)}
+/* Avatar */
+.ss-avatar{display:inline-grid;place-items:center;flex-shrink:0;border-radius:var(--radius-full);color:var(--on-brand);font-weight:600;border:2px solid var(--card)}
+.ss-avatars{display:inline-flex}.ss-avatars>*+*{margin-left:-8px}
+/* Position */
+.ss-pos{font-size:14px;line-height:20px;font-weight:600}
+.ss-pos--owe{color:var(--owe)}.ss-pos--owed{color:var(--owed)}.ss-pos--settled{color:var(--muted);font-weight:500}
+/* Banner */
+.ss-banner{display:flex;gap:var(--space-2);align-items:flex-start;border:1px solid;border-radius:var(--radius-md);padding:10px var(--space-3);font-size:14px;line-height:20px}
+.ss-banner svg{flex-shrink:0;margin-top:2px}
+.ss-banner--info{background:var(--info-bg);border-color:var(--info-line);color:var(--info-ink)}
+.ss-banner--warn{background:var(--warn-bg);border-color:var(--warn-line);color:var(--warn-ink)}
+.ss-banner--error{background:var(--error-bg);border-color:var(--error-line);color:var(--error-ink)}
+.ss-banner--success{background:var(--success-bg);border-color:var(--success-line);color:var(--success-ink)}
+/* Section */
+.ss-section{background:var(--surface);color:var(--muted);font-size:12px;line-height:16px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:var(--space-3) var(--space-4);margin:0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.ss-section--plain{background:none;border:0;text-transform:none;letter-spacing:0;font-size:16px;line-height:24px;color:var(--ink);padding:0}
+/* List row */
+.ss-row{display:flex;align-items:center;gap:var(--space-3);width:100%;background:var(--card);border:0;border-bottom:1px solid var(--line);padding:var(--space-3) var(--space-4);font:inherit;color:var(--ink);text-align:left;cursor:pointer;min-height:56px}
+.ss-row:hover{background:var(--sheet)}
+.ss-row--selected{outline:2px solid var(--brand-strong);outline-offset:-2px;border-radius:var(--radius-md)}
+.ss-row__body{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.ss-row__caption{font-size:12px;line-height:16px;color:var(--muted)}
+.ss-row__label{font-size:15px;line-height:22px}
+.ss-row__value{font-size:16px;line-height:22px;font-weight:600}
+.ss-row__chev{color:var(--muted);flex-shrink:0}
+/* Quick action */
+.ss-qa{display:flex;flex-direction:column;align-items:center;gap:var(--space-2);width:76px;background:none;border:0;padding:0;font:inherit;color:var(--muted);font-size:13px;line-height:16px;text-align:center;cursor:pointer}
+.ss-qa__disc{position:relative;display:grid;place-items:center;width:48px;height:48px;border-radius:var(--radius-full);background:var(--brand-soft);color:var(--brand)}
+.ss-qa__disc .ss-dot{position:absolute;top:0;right:0;border:2px solid var(--card);width:12px;height:12px}
+.ss-qa--tile .ss-qa__disc{border-radius:var(--radius-md);background:var(--card);border:1px solid var(--line);color:var(--muted);width:52px;height:52px}
+.ss-qa--tile .ss-new{position:absolute;top:-8px;right:-14px}
+.ss-qa:focus-visible{outline:2px solid var(--ink);outline-offset:4px;border-radius:var(--radius-md)}
+/* Header + hero */
+.ss-header{display:flex;align-items:center;gap:var(--space-2);height:56px;padding:0 var(--space-3);background:var(--card);border-bottom:1px solid var(--line)}
+.ss-header__title{flex:1;text-align:center;font-size:18px;line-height:24px;font-weight:600;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ss-icon-btn{display:grid;place-items:center;width:36px;height:36px;border-radius:var(--radius-full);background:none;border:0;color:inherit;cursor:pointer;position:relative}
+.ss-icon-btn:hover{background:var(--surface)}
+.ss-icon-btn .ss-dot{position:absolute;top:6px;right:6px}
+.ss-hero{background:linear-gradient(160deg,var(--brand-deep),var(--brand-strong));color:var(--on-brand);padding:var(--space-4) var(--space-5) calc(var(--space-6) + var(--radius-lg))}
+.ss-hero__bar{display:flex;align-items:center;gap:var(--space-2)}
+.ss-hero .ss-icon-btn:hover{background:rgba(255,255,255,.12)}
+.ss-hero .ss-btn--pill{background:transparent;color:var(--on-brand);border-color:var(--on-brand)}
+.ss-hero__greeting{font-size:24px;line-height:32px;font-weight:700;margin:var(--space-5) 0 var(--space-1)}
+.ss-hero__sub{font-size:15px;line-height:22px;margin:0}
+.ss-sheet{position:relative;margin-top:calc(-1 * var(--radius-lg));background:linear-gradient(var(--sheet),var(--card) 160px);border-radius:var(--radius-lg) var(--radius-lg) 0 0;box-shadow:var(--shadow-sheet);padding:var(--space-5) var(--space-4)}
+/* Tab bar */
+.ss-tabs{display:flex;background:var(--ink);padding:var(--space-2) var(--space-2) var(--space-3);border-radius:0 0 var(--radius-lg) var(--radius-lg)}
+.ss-tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:var(--space-1);background:none;border:0;color:var(--tab-inactive);font:inherit;font-size:11px;line-height:14px;font-weight:500;padding:var(--space-2) 0;cursor:pointer;border-radius:var(--radius-md)}
+.ss-tab[aria-current="page"]{color:var(--on-brand)}
+.ss-tab:focus-visible{outline:2px solid var(--on-brand)}
+/* Field */
+.ss-field{display:flex;flex-direction:column;gap:var(--space-1);font-size:14px;line-height:20px}
+.ss-field__label{font-weight:600}
+.ss-field__hint{font-size:12px;line-height:16px;color:var(--muted)}
+.ss-input{width:100%;border:1px solid var(--line);border-radius:var(--radius-md);background:var(--card);padding:10px var(--space-3);font:inherit;font-size:15px;color:var(--ink);outline:none}
+.ss-input:focus{border-color:var(--brand-strong);box-shadow:0 0 0 3px var(--brand-soft)}
