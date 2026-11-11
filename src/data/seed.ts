@@ -9,8 +9,8 @@ import type { CardTransaction, Expense, Group, Member, MemberId } from "../domai
 export const MEMBERS: Record<MemberId, Member> = {
   amy: { id: "amy", displayName: "Amy Tan", maskedName: "AMY T** L**", isDbsCustomer: true, avatarColor: "#E11D48" },
   ben: { id: "ben", displayName: "Ben Ong", maskedName: "BEN O** W**", isDbsCustomer: true, avatarColor: "#2563EB" },
-  cal: { id: "cal", displayName: "Cal Lim", maskedName: "CAL L** K**", isDbsCustomer: true, avatarColor: "#059669" },
-  dee: { id: "dee", displayName: "Dee Kumar", maskedName: "DEE K** R**", isDbsCustomer: true, avatarColor: "#D97706" },
+  cal: { id: "cal", displayName: "Cal Lim", maskedName: "CAL L** K**", isDbsCustomer: true, avatarColor: "#047857" },
+  dee: { id: "dee", displayName: "Dee Kumar", maskedName: "DEE K** R**", isDbsCustomer: true, avatarColor: "#B45309" },
   eve: { id: "eve", displayName: "Eve Chua", maskedName: "EVE C** H**", isDbsCustomer: false, avatarColor: "#7C3AED" },
 };
 
