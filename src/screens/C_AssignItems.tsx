@@ -61,7 +61,10 @@ export function AssignItems() {
 
   return (
     <Screen title="Who had what?" back={`/groups/${groupId}/add`}>
-      {draft.manual && <Banner tone="warn">We couldn't read this receipt. Enter the items manually; your photo is kept for reference.</Banner>}
+      {draft.manual && draft.receiptImageUrl && (
+        <Banner tone="warn">We couldn't read this receipt. Enter the items manually; your photo is kept for reference.</Banner>
+      )}
+      {draft.manual && !draft.receiptImageUrl && draft.items.length === 0 && <Banner>Add each item and its price, then tap who had it.</Banner>}
       {draft.receiptImageUrl && <img src={draft.receiptImageUrl} alt="Receipt" className="max-h-40 rounded-xl object-contain" />}
       {draft.confidence !== undefined && draft.confidence < 0.6 && (
         <Banner tone="warn">This receipt was hard to read ({Math.round(draft.confidence * 100)}% confidence). Check each line.</Banner>
