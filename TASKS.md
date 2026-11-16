@@ -20,7 +20,7 @@ Branch prefix `feat/d-` · Report Section 6
 - [x] US-17 *Settle everything*: one confirmation and one authentication when I owe several people (`store.settleAll` is ready); flag a failed payment while the others complete
 - [x] D1 progress and receipt state (reference number, time), failure demo via `demoSettings.failureRate`
 - [ ] Animate "6 debts → 2 payments" on screen D for the video
-- [ ] Deploy to GitHub Pages or Vercel; put the live link in the README and report
+- [x] Deploy to GitHub Pages; live link in the README (add it to the report too)
 - [ ] Write Section 6.1–6.3 and 6.6 from README "Architecture" and "Key design choices"
 
 ### #2 Product Manager — Dashboard (A), groups, inbox, acceptance testing
