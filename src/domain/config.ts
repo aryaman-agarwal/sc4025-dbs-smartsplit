@@ -30,6 +30,10 @@ export const CONFIG = {
   newMemberCoolingOffHours: 12,
   /** US-13: one "running low" alert when total falls below 20% of target. */
   lowVaultThreshold: 0.2,
+  /** US-14 / Section 7.5: a vault with no activity for this long gets a closing notice (MVP value). */
+  vaultInactiveDays: 14,
+  /** US-14: days after the notice before unspent reserves are released, unless someone extends. */
+  vaultReleaseNoticeDays: 3,
 
   /** US-19: reminders. */
   reminderFirstAfterHours: 48,

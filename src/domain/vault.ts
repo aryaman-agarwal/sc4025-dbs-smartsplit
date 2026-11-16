@@ -223,6 +223,33 @@ export function shouldSendLowAlert(vault: Vault): boolean {
   return !vault.lowAlertSent && vaultTotal(vault) < vault.targetCents * CONFIG.lowVaultThreshold;
 }
 
+/** US-12: change approval tiers. Small must sit below medium; the vault share is between 0 and 1. */
+export function updateTiers(vault: Vault, tiers: TierConfig): Result<Vault> {
+  if (vault.status !== "open") return fail("This vault is closed.");
+  if (tiers.smallMaxCents <= 0) return fail("The small-spend limit must be more than $0.");
+  if (tiers.mediumMaxCents <= tiers.smallMaxCents) return fail("The medium limit must be higher than the small limit.");
+  if (!(tiers.largeShareOfVault > 0 && tiers.largeShareOfVault <= 1)) return fail("The share of the vault must be between 1% and 100%.");
+  return ok({ ...vault, tiers: { ...tiers } });
+}
+
+/** US-14: record activity, which also cancels any pending inactivity notice. */
+export function touchVault(vault: Vault, now: ISODate): Vault {
+  return { ...vault, lastActivityAt: now, inactivityNoticeAt: undefined };
+}
+
+/**
+ * US-14: what to do about an inactive vault.
+ * "notify" once it has been idle for vaultInactiveDays; "release" when the
+ * notice has run for vaultReleaseNoticeDays without anyone extending.
+ */
+export function inactivityAction(vault: Vault, now: ISODate): "none" | "notify" | "release" {
+  if (vault.status !== "open") return "none";
+  if (vault.inactivityNoticeAt) {
+    return hoursBetween(vault.inactivityNoticeAt, now) >= CONFIG.vaultReleaseNoticeDays * 24 ? "release" : "none";
+  }
+  return hoursBetween(vault.lastActivityAt ?? vault.createdAt, now) >= CONFIG.vaultInactiveDays * 24 ? "notify" : "none";
+}
+
 /** US-14: close the vault; every unspent reservation is released to its owner. */
 export function closeVault(vault: Vault): { vault: Vault; released: Record<MemberId, Cents> } {
   const released = Object.fromEntries(Object.entries(vault.reservations).filter(([, v]) => v > 0));

@@ -7,11 +7,14 @@ import {
   createVault,
   executeSpend,
   expireIfStale,
+  inactivityAction,
   proRataDraw,
   rejectSpend,
   requestSpend,
   reserve,
   shouldSendLowAlert,
+  touchVault,
+  updateTiers,
   vaultTotal,
   type Result,
 } from "./vault";
@@ -165,5 +168,51 @@ describe("US-13 / US-14: alerts and close", () => {
     expect(vault.status).toBe("closed");
     expect(vaultTotal(vault)).toBe(0);
     expect(released).toEqual({ amy: 37000, ben: 37000, cal: 37000 });
+  });
+});
+
+describe("US-12: editing approval tiers", () => {
+  it("accepts valid tiers and uses them for the next spend", () => {
+    const v = unwrap(updateTiers(baliVault(), { smallMaxCents: 2000, mediumMaxCents: 10000, largeShareOfVault: 0.5, strictMode: false }));
+    expect(classifySpend(v, 3000, 3).tier).toBe("medium");
+    expect(classifySpend(v, 15000, 3).tier).toBe("large");
+  });
+
+  it("rejects a medium limit at or below the small limit", () => {
+    const r = updateTiers(baliVault(), { smallMaxCents: 5000, mediumMaxCents: 5000, largeShareOfVault: 0.25, strictMode: false });
+    expect(r.ok).toBe(false);
+  });
+
+  it("strict mode needs every other member", () => {
+    const v = unwrap(updateTiers(baliVault(), { ...baliVault().tiers, strictMode: true }));
+    expect(classifySpend(v, 100, 3)).toEqual({ tier: "strict", approvalsRequired: 2 });
+  });
+});
+
+describe("US-14: inactive vaults", () => {
+  const days = (n: number) => new Date(Date.parse(NOW) + n * 86_400_000).toISOString();
+
+  it("does nothing while the vault is in use", () => {
+    expect(inactivityAction(baliVault(), days(13))).toBe("none");
+  });
+
+  it("notifies after 14 idle days, then releases 3 days after the notice", () => {
+    const v = baliVault();
+    expect(inactivityAction(v, days(14))).toBe("notify");
+    const noticed = { ...v, inactivityNoticeAt: days(14) };
+    expect(inactivityAction(noticed, days(16))).toBe("none");
+    expect(inactivityAction(noticed, days(17))).toBe("release");
+  });
+
+  it("any activity cancels the notice and restarts the clock", () => {
+    const noticed = { ...baliVault(), inactivityNoticeAt: days(14) };
+    const touched = touchVault(noticed, days(15));
+    expect(touched.inactivityNoticeAt).toBeUndefined();
+    expect(inactivityAction(touched, days(28))).toBe("none");
+    expect(inactivityAction(touched, days(29))).toBe("notify");
+  });
+
+  it("ignores closed vaults", () => {
+    expect(inactivityAction(closeVault(baliVault()).vault, days(100))).toBe("none");
   });
 });
