@@ -21,24 +21,29 @@ npm run build      # production build in dist/
 
 | Flow (PRD 5.6) | Screens | Stories |
 |---|---|---|
-| 1. Split a bill: scan a demo receipt, tap who had what, SC + GST shared in proportion; or import a DBS card charge and split equally | B → C | US-04 to US-07 |
-| 2. Settle up: fewest payments (≤ n − 1), masked name, first-time payee warning, choose PayLah! or bank, simulated digital token | D → D1 | US-08, US-15, US-16 |
-| 3. Pre-fund a trip: create a vault, each member reserves in their own account, tiered approvals, pro-rata drawdown, close and release | E → E1 | US-09 to US-14, US-20 |
-| Groups, invites, dashboard, app-sent reminders, notifications | A, Inbox | US-01 to US-03, US-19 |
+| 1. Split a bill: scan a demo receipt or enter items by hand, tap who had what (or "Everyone"), SC + GST shared in proportion and switchable off for hawker receipts; or import a DBS card charge, confirm it and choose who's included | B → C | US-04 to US-07 |
+| 2. Settle up: fewest payments (≤ n − 1), masked names, first-time payee warning, choose PayLah! or bank, simulated digital token, receipt with PayNow reference; "Settle everything" pays several people with one approval and flags any that fail | D → D1 | US-08, US-15 to US-17 |
+| 3. Pre-fund a trip: create a vault, one-time debit consent, each member reserves in their own account, tiered approvals (editable, with strict mode), pay a merchant by mock QR scan or claim back a card payment, pro-rata drawdown, running-low and inactivity alerts, close and release | E → E1 | US-09 to US-14, US-20, US-21 |
+| Groups with contact-matching consent and search, invites, dashboard, app-sent reminders with one-tap Settle, notifications by day with pop-up alerts, privacy settings with a separate marketing opt-in | A, A2, Inbox, Privacy | US-01 to US-03, US-18, US-19 |
+| Metrics: North Star (weekly settled splits) and leading/lagging indicators from the demo data | Metrics | Report 4.5 |
 
-Purple **TODO** panels on each screen list what's left for its owner. Delete a panel once that work is done.
+Story-by-story status and the test that covers each one: [docs/acceptance.md](docs/acceptance.md). Usability test plan: [docs/usability.md](docs/usability.md).
+
+Purple **TODO** panels list what's still left on a screen. Delete a panel once that work is done.
 
 ### Demo controls (above the phone)
 
 - **Viewing as** — switch between Amy, Ben, Cal and Dee to show both sides of a payment or an approval.
 - **+24h** — move the demo clock forward to trigger reminders (48 h), approval expiry (24 h) and the new-member cooling-off (12 h).
+- **Fail payments** — make every PayNow payment fail, to show "You were not charged" and the partly-paid state of Settle everything.
+- **Metrics** — open the North Star and HEART metrics view.
 - **Reset** — restore the seed data. State is saved in the browser between refreshes.
 
 ### Video script (matches the report's demo data)
 
 1. *Viewing as Cal.* Bali Trip 2026 → **You owe $130.00**. Settle up → "4 debts → 2 payments" → Pay Amy → first-time payee warning → Approve → Settled.
 2. Add → *Seafood dinner* receipt → tap avatars → SC and GST shared → Save. Show *Smudged receipt* to demo the mismatch block.
-3. *Viewing as Amy.* Vault → Create "Bali Trip 2026", $1,500 → reserve $500. Switch to Ben and Cal and reserve $500 each.
+3. *Viewing as Amy.* Vault → Create "Bali Trip 2026", $1,500 → reserve $500 → the one-time debit consent sheet appears → I agree. Switch to Ben and Cal and reserve $500 each.
 4. *Viewing as Ben.* Pay or claim → Bali Blue Boat Tours $150 → "medium spend, needs 1 approval" → Send.
 5. *Viewing as Cal.* Approve → $50 drawn from each reserve, everyone alerted.
 6. *Viewing as Amy.* Close vault → $450 released to each member.
@@ -79,10 +84,11 @@ src/
 
 ## Tests
 
-`npm test` runs 52 tests:
+`npm test` runs 75 tests:
 
 - `domain/*.test.ts` — every acceptance-criterion example from the PRD (e.g. $100 → $119.90; A→B→C chain collapses to one payment; $200/$100 reserves carry $60/$30 of a $90 spend), a randomised n − 1 property test, and the 20 × 200 performance test.
-- `store/flows.test.ts` — Flows 1–3 end to end through the store, plus reminder rate limits.
+- `domain/metrics.test.ts` — North Star and indicator calculations.
+- `store/flows.test.ts` — Flows 1–3 end to end through the store, plus consent (US-02, US-10, US-18), settle everything (US-17), claims (US-21), tier changes and inactive vaults (US-12, US-14), and reminder rate limits.
 
 ## Team workflow
 

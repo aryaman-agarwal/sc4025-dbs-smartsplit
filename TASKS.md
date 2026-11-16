@@ -17,40 +17,42 @@ The brief says commit history will be checked for a fair workload. Every member 
 
 ### #1 MVP Engineer & UI — Settlement (D, D1), shell, release
 Branch prefix `feat/d-` · Report Section 6
-- [ ] US-17 *Settle everything*: one confirmation and one authentication when I owe several people (`store.settleAll` is ready); flag a failed payment while the others complete
-- [ ] D1 progress and receipt state (reference number, time), failure demo via `demoSettings.failureRate`
+- [x] US-17 *Settle everything*: one confirmation and one authentication when I owe several people (`store.settleAll` is ready); flag a failed payment while the others complete
+- [x] D1 progress and receipt state (reference number, time), failure demo via `demoSettings.failureRate`
 - [ ] Animate "6 debts → 2 payments" on screen D for the video
 - [ ] Deploy to GitHub Pages or Vercel; put the live link in the README and report
 - [ ] Write Section 6.1–6.3 and 6.6 from README "Architecture" and "Key design choices"
 
 ### #2 Product Manager — Dashboard (A), groups, inbox, acceptance testing
 Branch prefix `feat/a-` · Report Sections 5 and 6.5
-- [ ] A2 Create group: contact-sync consent sheet (Section 7.5), search, disable non-DBS contacts with an explanation (US-01, US-02)
-- [ ] Inbox: group by day, inline "Settle" on reminders, toast for new notifications (US-13, US-19)
-- [ ] `docs/acceptance.md`: one row per user story (US-01–21) → where it is in the app → which test covers it → pass/fail
-- [ ] Add missing store tests for any story without one (e.g. US-02 decline returns shares to payer)
+- [x] A2 Create group: contact-sync consent sheet (Section 7.5), search, disable non-DBS contacts with an explanation (US-01, US-02)
+- [x] Inbox: group by day, inline "Settle" on reminders, toast for new notifications (US-13, US-19)
+- [x] `docs/acceptance.md`: one row per user story (US-01–21) → where it is in the app → which test covers it → pass/fail
+- [x] Add missing store tests for any story without one (e.g. US-02 decline returns shares to payer)
 
 ### #3 Discovery Lead — Add expense (B), usability testing
 Branch prefix `feat/b-` · Report Sections 3 and 6.5
-- [ ] Camera viewfinder UI with framing guide; manual-entry button without a photo (US-04)
-- [ ] Card import: confirm sheet + choose who's included before an equal split (US-07)
+- [x] Manual-entry button without a photo (US-04)
+- [ ] Camera viewfinder UI with framing guide (today the photo button opens the phone's own camera)
+- [x] Card import: confirm sheet + choose who's included before an equal split (US-07)
 - [ ] Run 5–8 usability tests on the three flows; record task success, time-to-settle and SUS (PRD targets: ≥ 80 %, < 2 min, SUS ≥ 70)
-- [ ] Commit the test script and anonymised results as `docs/usability.md`
+- [x] Commit the test script as `docs/usability.md`
+- [ ] Add the anonymised results to `docs/usability.md`
 
 ### #4 Strategy & Research Lead — Itemised assigner (C), OCR, metrics
 Branch prefix `feat/c-` · Report Sections 2 and 4
-- [ ] US-06: toggle service charge / GST off for hawker receipts (`computeReceiptSplit` already accepts rates)
-- [ ] "Split equally among everyone" per item; show each person's items in the summary
+- [x] US-06: toggle service charge / GST off for hawker receipts (`computeReceiptSplit` already accepts rates)
+- [x] "Split equally among everyone" per item; show each person's items in the summary
 - [ ] Optional: a real OCR parser class in `services/receiptParser.ts` (vision LLM or Tesseract.js) behind the existing interface; cite Xu et al. 2020 / Kim et al. 2022
-- [ ] Analytics event log (`services/analytics.ts`) for the North Star and HEART metrics: `expense_added`, `debt_settled`, `vault_reserved`, `spend_approved`; a small metrics view showing weekly settled splits
+- [x] Metrics for the North Star and HEART/AARRR indicators, derived from app data in `domain/metrics.ts`, with a metrics view (demo bar → Metrics). No separate event log: every number comes from expenses, payments, spends and reminders already stored
 
 ### #5 GTM & Governance Lead — GroupVault (E, E1), privacy and consent
 Branch prefix `feat/e-` · Report Section 7
-- [ ] One-time debit-authorisation consent sheet before a member's first reservation (replaces the checkbox; Section 7.3)
-- [ ] E1 *Claim back a card payment* tab: amount + receipt → `requestSpend({ kind: "claim" })` (US-21)
-- [ ] Edit approval tiers and strict mode, with all members notified (US-12)
-- [ ] "Running low" and inactivity banners (US-13, US-14); cooling-off message (US-20)
-- [ ] Marketing opt-in toggle separate from feature consent (US-18); receipt-retention note in settings
+- [x] One-time debit-authorisation consent sheet before a member's first reservation (replaces the checkbox; Section 7.3)
+- [x] E1 *Claim back a card payment* tab: amount + receipt → `requestSpend({ kind: "claim" })` (US-21)
+- [x] Edit approval tiers and strict mode, with all members notified (US-12)
+- [x] "Running low" and inactivity banners (US-13, US-14); cooling-off message (US-20)
+- [x] Marketing opt-in toggle separate from feature consent (US-18); receipt-retention note in settings
 
 ## Everyone
 
