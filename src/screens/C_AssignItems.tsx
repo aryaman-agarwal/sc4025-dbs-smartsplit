@@ -1,7 +1,8 @@
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Users } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Avatar, Banner, Button, Card, Money, Screen, SectionTitle, TodoPanel, inputClass } from "../components/ui";
+import { Avatar, Banner, Button, Card, Money, Screen, SectionTitle, TodoPanel, ToggleRow, inputClass } from "../components/ui";
+import { CONFIG } from "../domain/config";
 import { formatSGD, toCents } from "../domain/money";
 import { computeReceiptSplit, reconcileWithReceipt } from "../domain/receiptSplit";
 import { useGroupView, useMe } from "../store/selectors";
@@ -23,8 +24,14 @@ export function AssignItems() {
   const draft = useDraftStore();
   const [title, setTitle] = useState(draft.merchant);
   const [error, setError] = useState<string>();
+  // US-06: hawker and no-charge receipts have no service charge and/or GST.
+  const [withSC, setWithSC] = useState(true);
+  const [withGST, setWithGST] = useState(true);
 
-  const split = useMemo(() => computeReceiptSplit(draft.items), [draft.items]);
+  const split = useMemo(
+    () => computeReceiptSplit(draft.items, { serviceChargeRate: withSC ? CONFIG.serviceChargeRate : 0, gstRate: withGST ? CONFIG.gstRate : 0 }),
+    [draft.items, withSC, withGST],
+  );
   const reconcile = draft.detectedTotalCents !== undefined ? reconcileWithReceipt(split.totalCents, draft.detectedTotalCents) : undefined;
 
   if (!view) return null;
@@ -93,7 +100,7 @@ export function AssignItems() {
               <Trash2 size={16} />
             </button>
           </div>
-          <div className="mt-2 flex gap-1.5">
+          <div className="mt-2 flex items-center gap-1.5">
             {view.memberIds.map((id) => (
               <button
                 key={id}
@@ -105,6 +112,13 @@ export function AssignItems() {
                 <Avatar member={members[id]} size={30} />
               </button>
             ))}
+            <button
+              onClick={() => updateItem(item.id, { assignees: item.assignees.length === view.memberIds.length ? [] : [...view.memberIds] })}
+              className={`ml-auto flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${item.assignees.length === view.memberIds.length ? "bg-ink text-white" : "bg-surface text-muted"}`}
+              aria-pressed={item.assignees.length === view.memberIds.length}
+            >
+              <Users size={14} /> Everyone
+            </button>
           </div>
         </Card>
       ))}
@@ -115,20 +129,34 @@ export function AssignItems() {
         <Plus size={16} /> Add item
       </Button>
 
+      <div className="flex flex-col gap-2">
+        <ToggleRow label={`Service charge (${Math.round(CONFIG.serviceChargeRate * 100)}%)`} hint="Turn off for hawker centres and places that don't charge it" checked={withSC} onChange={setWithSC} />
+        <ToggleRow label={`GST (${Math.round(CONFIG.gstRate * 100)}%)`} hint="Turn off if the receipt shows no GST" checked={withGST} onChange={setWithGST} />
+      </div>
+
       <Card>
         <Row label="Subtotal" cents={split.subtotalCents} />
-        <Row label="Service charge (10%)" cents={split.serviceChargeCents} />
-        <Row label="GST (9%)" cents={split.gstCents} />
+        {withSC && <Row label={`Service charge (${Math.round(CONFIG.serviceChargeRate * 100)}%)`} cents={split.serviceChargeCents} />}
+        {withGST && <Row label={`GST (${Math.round(CONFIG.gstRate * 100)}%)`} cents={split.gstCents} />}
         <div className="my-2 h-px bg-line" />
         <Row label="Total" cents={split.totalCents} bold />
-        {view.memberIds.filter((id) => split.sharesCents[id]).map((id) => (
-          <div key={id} className="mt-1 flex items-center justify-between text-sm">
-            <span className="flex items-center gap-2">
-              <Avatar member={members[id]} size={20} /> {id === me ? "You" : members[id].displayName.split(" ")[0]}
-            </span>
-            <Money cents={split.sharesCents[id]} className="font-semibold" />
-          </div>
-        ))}
+        {view.memberIds.filter((id) => split.sharesCents[id]).map((id) => {
+          const mine = draft.items.filter((i) => i.assignees.includes(id));
+          return (
+            <div key={id} className="mt-2 text-sm">
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <Avatar member={members[id]} size={20} /> {id === me ? "You" : members[id].displayName.split(" ")[0]}
+                </span>
+                <Money cents={split.sharesCents[id]} className="font-semibold" />
+              </div>
+              <p className="pl-7 text-xs text-muted">
+                {mine.map((i) => (i.assignees.length > 1 ? `${i.name} (shared ${i.assignees.length} ways)` : i.name)).join(", ")}
+                {(withSC || withGST) && " + their share of charges"}
+              </p>
+            </div>
+          );
+        })}
       </Card>
 
       {split.unassignedItemIds.length > 0 && <Banner tone="warn">Assign every item before saving ({split.unassignedItemIds.length} left).</Banner>}
@@ -145,12 +173,7 @@ export function AssignItems() {
       <TodoPanel
         owner="#4 Strategy & Research Lead"
         stories="US-05, US-06"
-        items={[
-          "Toggle service charge / GST off for hawker or no-charge receipts (computeReceiptSplit accepts rates)",
-          "'Split equally among everyone' shortcut per item",
-          "Show each person's item list in the summary, not only totals",
-          "Usability: test tap-to-assign with 5 users and record time-on-task",
-        ]}
+        items={["Usability: test tap-to-assign with 5 users and record time-on-task (docs/usability.md, task T1)"]}
       />
     </Screen>
   );

@@ -15,6 +15,7 @@ import { VaultDetail } from "./screens/E_VaultDetail";
 import { VaultSpend } from "./screens/E1_VaultSpend";
 import { Inbox } from "./screens/Inbox";
 import { Privacy } from "./screens/Privacy";
+import { Metrics } from "./screens/Metrics";
 
 /**
  * Route map. Screen letters match the PRD (Section 5.6, Table 20):
@@ -43,6 +44,7 @@ export default function App() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/inbox" element={<Inbox />} />
           <Route path="/privacy" element={<Privacy />} />
+          <Route path="/metrics" element={<Metrics />} />
           <Route path="/groups/new" element={<CreateGroup />} />
           <Route path="/groups/:groupId" element={<GroupDetail />} />
           <Route path="/groups/:groupId/add" element={<AddExpense />} />

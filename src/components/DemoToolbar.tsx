@@ -1,4 +1,4 @@
-import { Clock, RotateCcw, Zap, ZapOff } from "lucide-react";
+import { BarChart3, Clock, RotateCcw, Zap, ZapOff } from "lucide-react";
 import { useState } from "react";
 import { demoSettings } from "../services/payNow";
 import { useNavigate } from "react-router-dom";
@@ -53,6 +53,9 @@ export function DemoToolbar() {
         aria-pressed={failing}
       >
         {failing ? <ZapOff size={14} /> : <Zap size={14} />} {failing ? "Payments failing" : "Fail payments"}
+      </button>
+      <button onClick={() => navigate("/metrics")} className="flex items-center gap-1 rounded-full px-2 py-1 hover:bg-neutral-100" title="North Star and HEART metrics">
+        <BarChart3 size={14} /> Metrics
       </button>
       <button
         onClick={() => {

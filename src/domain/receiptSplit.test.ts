@@ -60,3 +60,23 @@ describe("US-04: reconcile with the receipt total", () => {
     expect(reconcileWithReceipt(11990, 12000)).toEqual({ ok: false, differenceCents: -10 });
   });
 });
+
+describe("US-06: receipts without service charge or GST", () => {
+  const items = [
+    { id: "1", name: "Chicken rice", priceCents: 450, assignees: ["amy"] },
+    { id: "2", name: "Kopi", priceCents: 160, assignees: ["amy", "ben"] },
+  ];
+
+  it("charges nothing extra at a hawker centre", () => {
+    const r = computeReceiptSplit(items, { serviceChargeRate: 0, gstRate: 0 });
+    expect(r.totalCents).toBe(610);
+    expect(r.sharesCents).toEqual({ amy: 530, ben: 80 });
+  });
+
+  it("applies GST alone when there's no service charge", () => {
+    const r = computeReceiptSplit(items, { serviceChargeRate: 0 });
+    expect(r.serviceChargeCents).toBe(0);
+    expect(r.gstCents).toBe(55); // 9% of 610 = 54.9
+    expect(r.sharesCents.amy + r.sharesCents.ben).toBe(665);
+  });
+});
