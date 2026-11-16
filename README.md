@@ -6,7 +6,7 @@ A clickable, working prototype of SmartSplit & GroupVault: split a bill, settle 
 
 > **Demo only — no real money moves.** PayNow, card data, digital token and OCR are simulated. This project is not affiliated with DBS Bank.
 
-**Live demo:** https://aryamanagarwal.me/sc4025-dbs-smartsplit/ (redeploys on every push to `main`)
+**Live demo:** https://aryaman-agarwal.github.io/sc4025-dbs-smartsplit/ (redeploys on every push to `main`)
 
 ## Run it
 
