@@ -6,10 +6,10 @@ The design system for **SmartSplit & GroupVault**, an SC4025 concept feature for
 
 ## Content fundamentals
 
-- **Say the money plainly.** "You owe SGD 130.00", "You are owed SGD 45.00", "Settled". Use your/you and the person's first name: "Pay Amy SGD 130.00".
+- **Say the money plainly.** "You owe SGD 130.00", "You are owed SGD 45.00", "Settled". Use your/you and the person's first name: "Pay Sarah SGD 130.00".
 - **Show the netting.** "4 debts → 2 payments. We netted everything so money doesn't move in circles." Short sentences, no jargon ("pro rata" becomes "SGD 50 from each reserve").
 - **Write sentence case for titles and Title Case for features**: "Settle up", "Group Vault", "SmartSplit". CTA labels are uppercase in the button style (NEXT, APPROVE).
-- **Be careful about scams.** Show payees as masked names (AMY T** L**), never a phone or account number field. Warn on a first-time payee. Reminders stay in-app with no links.
+- **Be careful about scams.** Show payees as masked names (SARAH T** L**), never a phone or account number field. Warn on a first-time payee. Reminders stay in-app with no links.
 - **Write amounts as `SGD 1,234.56`**, with the currency in muted text and the figures tabular. Store them as integer cents.
 
 ## Visual foundations
@@ -31,7 +31,7 @@ These are `window.SmartSplit` components, hand-written from `src/components/ui.t
 
 ## Not synced
 
-- **Changed from the repo:** `--color-brand` `#e60000` becomes `brand-strong` `#d9333e` / `brand` `#eb483f`. `--color-ink` `#1d1d1f` becomes `#1b2732`, `--color-muted` `#6b7280` becomes `#5c636a`, `--color-line` `#e5e7eb` becomes `#dfe3e7`, and `--color-surface` `#f5f5f7` becomes `#f5f7f9`. The Cal and Dee avatar colours are darkened to pass contrast. Update `src/index.css` and `src/data/seed.ts` to match.
+- **Changed from the repo:** `--color-brand` `#e60000` becomes `brand-strong` `#d9333e` / `brand` `#eb483f`. `--color-ink` `#1d1d1f` becomes `#1b2732`, `--color-muted` `#6b7280` becomes `#5c636a`, `--color-line` `#e5e7eb` becomes `#dfe3e7`, and `--color-surface` `#f5f5f7` becomes `#f5f7f9`. The Marcus and Dee avatar colours are darkened to pass contrast. Update `src/index.css` and `src/data/seed.ts` to match.
 - **Banner tones** are rewritten as hex in place of Tailwind's sky, amber, red and emerald.
 - **Fonts:** Inter isn't bundled in the repo, so it's named in the stack only. Load it from Google Fonts or self-host it.
 - **Not built:** `TodoPanel` (a team scaffold), `PhoneFrame` and `DemoToolbar` (demo chrome). The components are hand-written rather than built from the repo, so they're not the React source.

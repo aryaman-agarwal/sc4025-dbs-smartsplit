@@ -129,7 +129,7 @@ const uid = (prefix: string) => `${prefix}-${Date.now().toString(36)}${Math.rand
 function initialData() {
   const seed = buildSeed();
   return {
-    currentUserId: "cal" as MemberId,
+    currentUserId: "marcus" as MemberId,
     clockOffsetHours: 0,
     members: MEMBERS,
     accounts: structuredClone(STARTING_BALANCES),
@@ -556,7 +556,7 @@ export const useAppStore = create<AppState>()(
       };
     },
     {
-      name: "smartsplit-demo-v1",
+      name: "smartsplit-demo-v2",
       storage: createJSONStorage(() => localStorage),
       // Persist data only, not functions.
       partialize: (s) => Object.fromEntries(Object.entries(s).filter(([, v]) => typeof v !== "function")),

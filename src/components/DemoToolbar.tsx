@@ -7,7 +7,7 @@ import { Avatar } from "./ui";
 
 /**
  * Presenter controls that sit OUTSIDE the phone frame:
- * - switch between Amy, Ben, Cal and Dee to show both sides of a payment or approval
+ * - switch between Sarah, Ben, Marcus and Dee to show both sides of a payment or approval
  * - move the demo clock forward to show reminders, expiry and cooling-off
  * - make PayNow payments fail, to show "You were not charged" (US-15, US-17)
  * - reset all demo data
@@ -20,7 +20,7 @@ export function DemoToolbar() {
   const advanceClock = useAppStore((s) => s.advanceClock);
   const offset = useAppStore((s) => s.clockOffsetHours);
   const resetDemo = useAppStore((s) => s.resetDemo);
-  const demoIds = ["amy", "ben", "cal", "dee"];
+  const demoIds = ["sarah", "ben", "marcus", "dee"];
   const [failing, setFailing] = useState(demoSettings.failureRate > 0);
 
   return (

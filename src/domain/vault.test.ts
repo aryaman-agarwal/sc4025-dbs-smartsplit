@@ -36,11 +36,11 @@ function baliVault(): Vault {
       name: "Bali Trip 2026",
       targetCents: 150000,
       endDate: "2026-12-31T00:00:00Z",
-      adminId: "amy",
+      adminId: "sarah",
       now: NOW,
     }),
   );
-  for (const id of ["amy", "ben", "cal"]) v = unwrap(reserve(v, id, 50000, 100000));
+  for (const id of ["sarah", "ben", "marcus"]) v = unwrap(reserve(v, id, 50000, 100000));
   return v;
 }
 
@@ -59,7 +59,7 @@ describe("US-09 / US-10: create and reserve", () => {
   it("creates an open vault with the organiser as admin", () => {
     const v = baliVault();
     expect(v.status).toBe("open");
-    expect(v.adminId).toBe("amy");
+    expect(v.adminId).toBe("sarah");
     expect(vaultTotal(v)).toBe(150000);
   });
 
@@ -69,7 +69,7 @@ describe("US-09 / US-10: create and reserve", () => {
   });
 
   it("holds nothing when funds are insufficient", () => {
-    const r = reserve(baliVault(), "cal", 20000, 10000);
+    const r = reserve(baliVault(), "marcus", 20000, 10000);
     expect(r).toEqual({ ok: false, error: "Not enough available balance. Nothing was held." });
   });
 });
@@ -91,7 +91,7 @@ describe("US-12: tiered approvals", () => {
   });
 
   it("anything over 25% of the vault is large, even below $300", () => {
-    const small = { ...v, reservations: { amy: 10000 } };
+    const small = { ...v, reservations: { sarah: 10000 } };
     expect(classifySpend(small, 4000, 3).tier).toBe("large");
   });
 
@@ -102,16 +102,16 @@ describe("US-12: tiered approvals", () => {
 });
 
 describe("US-11 / US-20: pay from vault", () => {
-  it("runs Flow 3 end to end: $150 boat, Cal approves, $50 from each reserve", () => {
+  it("runs Flow 3 end to end: $150 boat, Marcus approves, $50 from each reserve", () => {
     const v = baliVault();
     let spend = unwrap(requestSpend(v, spendInput(15000)));
     expect(spend.status).toBe("pending");
     expect(executeSpend(v, spend).ok).toBe(false); // not approved yet
 
-    spend = unwrap(approveSpend(spend, "cal"));
+    spend = unwrap(approveSpend(spend, "marcus"));
     const { vault, spend: done } = unwrap(executeSpend(v, spend));
     expect(done.status).toBe("executed");
-    expect(done.draws).toEqual({ amy: 5000, ben: 5000, cal: 5000 });
+    expect(done.draws).toEqual({ sarah: 5000, ben: 5000, marcus: 5000 });
     expect(vaultTotal(vault)).toBe(135000);
   });
 
@@ -139,9 +139,9 @@ describe("US-11 / US-20: pay from vault", () => {
   it("rejects once the approval can no longer be reached", () => {
     const v = baliVault();
     const spend = unwrap(requestSpend(v, spendInput(15000)));
-    const once = unwrap(rejectSpend(spend, "cal", 3));
-    expect(once.status).toBe("pending"); // Amy could still approve
-    expect(unwrap(rejectSpend(once, "amy", 3)).status).toBe("rejected");
+    const once = unwrap(rejectSpend(spend, "marcus", 3));
+    expect(once.status).toBe("pending"); // Sarah could still approve
+    expect(unwrap(rejectSpend(once, "sarah", 3)).status).toBe("rejected");
   });
 
   it("expires after 24 hours", () => {
@@ -157,17 +157,17 @@ describe("US-11 / US-20: pay from vault", () => {
 
 describe("US-13 / US-14: alerts and close", () => {
   it("sends one running-low alert below 20% of target", () => {
-    const v = { ...baliVault(), reservations: { amy: 29999 } };
+    const v = { ...baliVault(), reservations: { sarah: 29999 } };
     expect(shouldSendLowAlert(v)).toBe(true);
     expect(shouldSendLowAlert({ ...v, lowAlertSent: true })).toBe(false);
   });
 
   it("releases every unspent reservation on close", () => {
-    const v = { ...baliVault(), reservations: { amy: 37000, ben: 37000, cal: 37000 } };
+    const v = { ...baliVault(), reservations: { sarah: 37000, ben: 37000, marcus: 37000 } };
     const { vault, released } = closeVault(v);
     expect(vault.status).toBe("closed");
     expect(vaultTotal(vault)).toBe(0);
-    expect(released).toEqual({ amy: 37000, ben: 37000, cal: 37000 });
+    expect(released).toEqual({ sarah: 37000, ben: 37000, marcus: 37000 });
   });
 });
 
