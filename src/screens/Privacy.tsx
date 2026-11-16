@@ -13,6 +13,7 @@ export function Privacy() {
   const marketing = useAppStore((s) => !!s.marketingOptIn[me]);
   const setMarketing = useAppStore((s) => s.setMarketingOptIn);
   const debitConsentAt = useAppStore((s) => s.debitConsent[me]);
+  const contactsConsentAt = useAppStore((s) => s.contactsConsent[me]);
 
   const when = (iso?: string) => (iso ? `Given on ${new Date(iso).toLocaleDateString("en-SG", { day: "numeric", month: "short", year: "numeric" })}` : "Not given yet");
 
@@ -36,6 +37,10 @@ export function Privacy() {
         <div>
           <p className="font-medium">GroupVault debit authorisation</p>
           <p className="text-xs text-muted">{when(debitConsentAt)}. Lets DBS debit your reserved amount only for spends your group approves.</p>
+        </div>
+        <div>
+          <p className="font-medium">Contact matching</p>
+          <p className="text-xs text-muted">{when(contactsConsentAt)}. Contacts are matched on your phone only, not stored and not used for marketing.</p>
         </div>
       </Card>
 
