@@ -15,11 +15,11 @@ Owner: #3 Discovery Lead · Report Section 6.5 · PRD targets (Section 5.2): tas
 
 | # | Task (read to participant) | Start | Success state | Stories |
 |---|---|---|---|---|
-| T1 | "You're Amy. Split the seafood dinner receipt: Ben and Cal shared the fries, everything else is yours." | Viewing as Amy, dashboard | Expense saved; Bali Trip balances update | US-04–06 |
-| T2 | "You're Cal. Pay back whoever you owe for the Bali trip." | Viewing as Cal, dashboard | "Paid" receipt with reference | US-08, US-15–16 |
-| T3 | "You're Amy. Set up a $1,500 trip fund for Bali and put in your $500." | Viewing as Amy, Bali Trip | Vault shows $500 reserved | US-09–10 |
-| T4 | "You're Ben. Pay the boat tour ($150) from the trip fund." | Viewing as Ben, after T3 with Ben and Cal reserved | Request sent for approval | US-12, US-20 |
-| T5 | "You're Cal. Ben's asked to pay for something from the fund. Deal with it." | Viewing as Cal | Spend approved and executed | US-11–13 |
+| T1 | "You're Sarah. Split the seafood dinner receipt: Ben and Marcus shared the fries, everything else is yours." | Viewing as Sarah, dashboard | Expense saved; Bali Trip balances update | US-04–06 |
+| T2 | "You're Marcus. Pay back whoever you owe for the Bali trip." | Viewing as Marcus, dashboard | "Paid" receipt with reference | US-08, US-15–16 |
+| T3 | "You're Sarah. Set up a $1,500 trip fund for Bali and put in your $500." | Viewing as Sarah, Bali Trip | Vault shows $500 reserved | US-09–10 |
+| T4 | "You're Ben. Pay the boat tour ($150) from the trip fund." | Viewing as Ben, after T3 with Ben and Marcus reserved | Request sent for approval | US-12, US-20 |
+| T5 | "You're Marcus. Ben's asked to pay for something from the fund. Deal with it." | Viewing as Marcus | Spend approved and executed | US-11–13 |
 
 Time to settle (PRD 5.2) = T1 start to T2 success for the same participant, if run back to back.
 

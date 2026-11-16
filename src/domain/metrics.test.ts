@@ -9,9 +9,9 @@ const expense = (id: string, hoursAgo: number, source: Expense["source"] = "rece
   id,
   groupId: "g",
   title: id,
-  payerId: "amy",
+  payerId: "sarah",
   totalCents: 3000,
-  shares: { amy: 1000, ben: 1000, cal: 1000 },
+  shares: { sarah: 1000, ben: 1000, marcus: 1000 },
   source,
   createdAt: ago(hoursAgo),
 });
@@ -19,7 +19,7 @@ const payment = (fromId: string, hoursAgo: number, status: Payment["status"] = "
   id: `${fromId}${hoursAgo}`,
   groupId: "g",
   fromId,
-  toId: "amy",
+  toId: "sarah",
   amountCents: 1000,
   status,
   source: "bank",
@@ -40,7 +40,7 @@ describe("computeMetrics", () => {
     const m = computeMetrics({
       now: NOW,
       expenses: [expense("a", 10), expense("b", 30, "card"), expense("c", 200, "manual"), expense("v", 5, "vault")],
-      payments: [payment("ben", 2), payment("cal", 3), payment("cal", 190), payment("ben", 1, "failed")],
+      payments: [payment("ben", 2), payment("marcus", 3), payment("marcus", 190), payment("ben", 1, "failed")],
       spends: [],
       notifications: [],
     });
@@ -54,7 +54,7 @@ describe("computeMetrics", () => {
       expenses: [],
       payments: [payment("ben", 40)], // 20 h after Ben's reminder
       spends: [],
-      notifications: [reminder("ben", 60), reminder("cal", 60)],
+      notifications: [reminder("ben", 60), reminder("marcus", 60)],
     });
     expect(m.reminders).toEqual({ sent: 2, paidWithin48h: 1 });
   });
@@ -63,7 +63,7 @@ describe("computeMetrics", () => {
     const m = computeMetrics({
       now: NOW,
       expenses: [expense("a", 100)],
-      payments: [payment("ben", 90), payment("cal", 80)], // 10 h and 20 h later
+      payments: [payment("ben", 90), payment("marcus", 80)], // 10 h and 20 h later
       spends: [],
       notifications: [],
     });

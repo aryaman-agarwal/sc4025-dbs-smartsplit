@@ -12,37 +12,37 @@ const item = (id: string, priceCents: number, assignees: string[]): ReceiptItem 
 
 describe("US-06: service charge and GST shared fairly", () => {
   it("matches the PRD example: $100 subtotal -> $119.90", () => {
-    const r = computeReceiptSplit([item("set", 10000, ["amy"])]);
+    const r = computeReceiptSplit([item("set", 10000, ["sarah"])]);
     expect(r.subtotalCents).toBe(10000);
     expect(r.serviceChargeCents).toBe(1000);
     expect(r.gstCents).toBe(990);
     expect(r.totalCents).toBe(11990);
-    expect(r.sharesCents).toEqual({ amy: 11990 });
+    expect(r.sharesCents).toEqual({ sarah: 11990 });
   });
 
   it("shares charges in proportion to what each person ordered", () => {
-    const r = computeReceiptSplit([item("steak", 6000, ["amy"]), item("salad", 2000, ["ben"])]);
-    // Amy ordered 75%, Ben 25% of a $95.92 total
+    const r = computeReceiptSplit([item("steak", 6000, ["sarah"]), item("salad", 2000, ["ben"])]);
+    // Sarah ordered 75%, Ben 25% of a $95.92 total
     expect(r.totalCents).toBe(9592);
-    expect(r.sharesCents.amy).toBe(7194);
+    expect(r.sharesCents.sarah).toBe(7194);
     expect(r.sharesCents.ben).toBe(2398);
     expect(sum(Object.values(r.sharesCents))).toBe(r.totalCents);
   });
 
   it("supports receipts with no service charge (e.g. hawker)", () => {
-    const r = computeReceiptSplit([item("rice", 500, ["amy"])], { serviceChargeRate: 0, gstRate: 0 });
+    const r = computeReceiptSplit([item("rice", 500, ["sarah"])], { serviceChargeRate: 0, gstRate: 0 });
     expect(r.totalCents).toBe(500);
   });
 });
 
 describe("US-05: assign receipt items", () => {
-  it("splits a shared item equally (shared fries between Ben and Cal)", () => {
-    const r = computeReceiptSplit([item("fries", 901, ["ben", "cal"])], { serviceChargeRate: 0, gstRate: 0 });
-    expect(r.itemSharesCents).toEqual({ ben: 451, cal: 450 });
+  it("splits a shared item equally (shared fries between Ben and Marcus)", () => {
+    const r = computeReceiptSplit([item("fries", 901, ["ben", "marcus"])], { serviceChargeRate: 0, gstRate: 0 });
+    expect(r.itemSharesCents).toEqual({ ben: 451, marcus: 450 });
   });
 
   it("blocks saving when any item is unassigned", () => {
-    const r = computeReceiptSplit([item("a", 1000, ["amy"]), item("b", 500, [])]);
+    const r = computeReceiptSplit([item("a", 1000, ["sarah"]), item("b", 500, [])]);
     expect(r.unassignedItemIds).toEqual(["b"]);
     expect(r.sharesCents).toEqual({});
   });
@@ -63,20 +63,20 @@ describe("US-04: reconcile with the receipt total", () => {
 
 describe("US-06: receipts without service charge or GST", () => {
   const items = [
-    { id: "1", name: "Chicken rice", priceCents: 450, assignees: ["amy"] },
-    { id: "2", name: "Kopi", priceCents: 160, assignees: ["amy", "ben"] },
+    { id: "1", name: "Chicken rice", priceCents: 450, assignees: ["sarah"] },
+    { id: "2", name: "Kopi", priceCents: 160, assignees: ["sarah", "ben"] },
   ];
 
   it("charges nothing extra at a hawker centre", () => {
     const r = computeReceiptSplit(items, { serviceChargeRate: 0, gstRate: 0 });
     expect(r.totalCents).toBe(610);
-    expect(r.sharesCents).toEqual({ amy: 530, ben: 80 });
+    expect(r.sharesCents).toEqual({ sarah: 530, ben: 80 });
   });
 
   it("applies GST alone when there's no service charge", () => {
     const r = computeReceiptSplit(items, { serviceChargeRate: 0 });
     expect(r.serviceChargeCents).toBe(0);
     expect(r.gstCents).toBe(55); // 9% of 610 = 54.9
-    expect(r.sharesCents.amy + r.sharesCents.ben).toBe(665);
+    expect(r.sharesCents.sarah + r.sharesCents.ben).toBe(665);
   });
 });

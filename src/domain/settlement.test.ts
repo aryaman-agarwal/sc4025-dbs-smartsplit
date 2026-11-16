@@ -27,42 +27,42 @@ function settle(balances: Record<string, Cents>, transfers: ReturnType<typeof si
 
 describe("netBalances", () => {
   it("matches the Bali worked example (PRD 5.3)", () => {
-    const ids = ["amy", "ben", "cal"];
+    const ids = ["sarah", "ben", "marcus"];
     const exps = [
-      expense("amy", { amy: 10000, ben: 10000, cal: 10000 }), // villa $300
-      expense("ben", { amy: 3000, ben: 3000, cal: 3000 }), // dinner $90
+      expense("sarah", { sarah: 10000, ben: 10000, marcus: 10000 }), // villa $300
+      expense("ben", { sarah: 3000, ben: 3000, marcus: 3000 }), // dinner $90
     ];
-    expect(netBalances(ids, exps, [])).toEqual({ amy: 17000, ben: -4000, cal: -13000 });
+    expect(netBalances(ids, exps, [])).toEqual({ sarah: 17000, ben: -4000, marcus: -13000 });
   });
 
   it("ignores vault-funded expenses and failed payments", () => {
-    const exps = [expense("amy", { amy: 100, ben: 100 }, "vault")];
+    const exps = [expense("sarah", { sarah: 100, ben: 100 }, "vault")];
     const failed: Payment = {
       id: "p",
       groupId: "g",
       fromId: "ben",
-      toId: "amy",
+      toId: "sarah",
       amountCents: 500,
       status: "failed",
       source: "bank",
       createdAt: "",
     };
-    expect(netBalances(["amy", "ben"], exps, [failed])).toEqual({ amy: 0, ben: 0 });
+    expect(netBalances(["sarah", "ben"], exps, [failed])).toEqual({ sarah: 0, ben: 0 });
   });
 
   it("treats a successful payment as settling the debt", () => {
-    const exps = [expense("amy", { amy: 1000, ben: 1000 })];
+    const exps = [expense("sarah", { sarah: 1000, ben: 1000 })];
     const paid: Payment = {
       id: "p",
       groupId: "g",
       fromId: "ben",
-      toId: "amy",
+      toId: "sarah",
       amountCents: 1000,
       status: "success",
       source: "paylah",
       createdAt: "",
     };
-    expect(netBalances(["amy", "ben"], exps, [paid])).toEqual({ amy: 0, ben: 0 });
+    expect(netBalances(["sarah", "ben"], exps, [paid])).toEqual({ sarah: 0, ben: 0 });
   });
 });
 
@@ -73,10 +73,10 @@ describe("US-08: net debt minimisation", () => {
   });
 
   it("matches the Bali example: two payments", () => {
-    const t = simplifyDebts({ amy: 17000, ben: -4000, cal: -13000 });
+    const t = simplifyDebts({ sarah: 17000, ben: -4000, marcus: -13000 });
     expect(t).toEqual([
-      { fromId: "cal", toId: "amy", amountCents: 13000 },
-      { fromId: "ben", toId: "amy", amountCents: 4000 },
+      { fromId: "marcus", toId: "sarah", amountCents: 13000 },
+      { fromId: "ben", toId: "sarah", amountCents: 4000 },
     ]);
   });
 
@@ -119,7 +119,7 @@ describe("US-08: net debt minimisation", () => {
 
 describe("rawDebtCount", () => {
   it("counts distinct who-owes-whom pairs before simplification", () => {
-    const exps = [expense("amy", { amy: 1, ben: 1, cal: 1 }), expense("ben", { amy: 1, ben: 1, cal: 1 })];
+    const exps = [expense("sarah", { sarah: 1, ben: 1, marcus: 1 }), expense("ben", { sarah: 1, ben: 1, marcus: 1 })];
     expect(rawDebtCount(exps)).toBe(4);
   });
 });

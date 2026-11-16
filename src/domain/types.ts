@@ -12,7 +12,7 @@ export type ISODate = string;
 export interface Member {
   id: MemberId;
   displayName: string;
-  /** Shown on payment confirmation, e.g. "AMY T** L**" (US-15). */
+  /** Shown on payment confirmation, e.g. "SARAH T** L**" (US-15). */
   maskedName: string;
   /** MVP: only DBS/POSB customers can join (US-01). */
   isDbsCustomer: boolean;

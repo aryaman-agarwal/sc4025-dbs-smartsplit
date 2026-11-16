@@ -33,7 +33,7 @@ Purple **TODO** panels list what's still left on a screen. Delete a panel once t
 
 ### Demo controls (above the phone)
 
-- **Viewing as** — switch between Amy, Ben, Cal and Dee to show both sides of a payment or an approval.
+- **Viewing as** — switch between Sarah, Ben, Marcus and Dee to show both sides of a payment or an approval.
 - **+24h** — move the demo clock forward to trigger reminders (48 h), approval expiry (24 h) and the new-member cooling-off (12 h).
 - **Fail payments** — make every PayNow payment fail, to show "You were not charged" and the partly-paid state of Settle everything.
 - **Metrics** — open the North Star and HEART metrics view.
@@ -41,12 +41,12 @@ Purple **TODO** panels list what's still left on a screen. Delete a panel once t
 
 ### Video script (matches the report's demo data)
 
-1. *Viewing as Cal.* Bali Trip 2026 → **You owe $130.00**. Settle up → "4 debts → 2 payments" → Pay Amy → first-time payee warning → Approve → Settled.
+1. *Viewing as Marcus.* Bali Trip 2026 → **You owe $130.00**. Settle up → "4 debts → 2 payments" → Pay Sarah → first-time payee warning → Approve → Settled.
 2. Add → *Seafood dinner* receipt → tap avatars → SC and GST shared → Save. Show *Smudged receipt* to demo the mismatch block.
-3. *Viewing as Amy.* Vault → Create "Bali Trip 2026", $1,500 → reserve $500 → the one-time debit consent sheet appears → I agree. Switch to Ben and Cal and reserve $500 each.
+3. *Viewing as Sarah.* Vault → Create "Bali Trip 2026", $1,500 → reserve $500 → the one-time debit consent sheet appears → I agree. Switch to Ben and Marcus and reserve $500 each.
 4. *Viewing as Ben.* Pay or claim → Bali Blue Boat Tours $150 → "medium spend, needs 1 approval" → Send.
-5. *Viewing as Cal.* Approve → $50 drawn from each reserve, everyone alerted.
-6. *Viewing as Amy.* Close vault → $450 released to each member.
+5. *Viewing as Marcus.* Approve → $50 drawn from each reserve, everyone alerted.
+6. *Viewing as Sarah.* Close vault → $450 released to each member.
 
 ## Architecture
 
@@ -63,7 +63,7 @@ src/
   services/      Simulated external systems (swap for real ones later)
     receiptParser.ts ReceiptParser interface + MockReceiptParser
     payNow.ts        Simulated PayNow rail (latency, failure rate)
-  data/          Seed data (Amy, Ben, Cal, Dee, Eve) and demo receipts
+  data/          Seed data (Sarah, Ben, Marcus, Dee, Eve) and demo receipts
   store/         Zustand store wiring domain logic to the UI; selectors; flow tests
   components/    Phone frame, demo toolbar, shared UI kit (Button, Card, Money, …)
   screens/       One file per screen; letters match PRD Table 20
