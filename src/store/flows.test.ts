@@ -81,6 +81,7 @@ describe("Flow 3: pre-fund a trip", () => {
 
     for (const id of ["amy", "ben", "cal"]) {
       as(id);
+      store().giveDebitConsent();
       expect(store().reserve(vaultId, 50000).ok).toBe(true);
     }
     expect(store().accounts.cal.bankCents).toBe(45000); // 95,000 - 50,000
@@ -112,5 +113,83 @@ describe("Flow 3: pre-fund a trip", () => {
     for (let i = 0; i < 5; i++) store().advanceClock(72);
     // 3 debts (Ben→Amy, Cal→Amy, and Cal→Dee in Flat 07-12) × 3 reminders each, then stop
     expect(count()).toBe(9);
+  });
+});
+
+describe("GroupVault governance", () => {
+  const openVault = () => {
+    as("amy");
+    const r = store().createVault({ groupId: "g-bali", name: "Bali Trip 2026", targetCents: 150000, endDate: "2099-01-01T00:00:00Z" });
+    return r.ok ? r.value : "";
+  };
+  const vaultOf = (id: string) => store().vaults.find((v) => v.id === id)!;
+
+  it("needs the one-time debit authorisation before the first reserve (US-10)", () => {
+    const id = openVault();
+    as("ben");
+    const r = store().reserve(id, 10000);
+    expect(r.ok).toBe(false);
+    expect(store().accounts.ben.bankCents).toBe(180000);
+    store().giveDebitConsent();
+    expect(store().reserve(id, 10000).ok).toBe(true);
+    expect(store().reserve(id, 10000).ok).toBe(true); // asked only once
+  });
+
+  it("keeps marketing opt-in off by default and separate per member (US-18)", () => {
+    as("cal");
+    expect(store().marketingOptIn.cal).toBeFalsy();
+    store().giveDebitConsent();
+    expect(store().marketingOptIn.cal).toBeFalsy(); // feature consent doesn't opt you in
+    store().setMarketingOptIn(true);
+    expect(store().marketingOptIn).toEqual({ cal: true });
+  });
+
+  it("lets only the admin change tiers and tells every member (US-12)", () => {
+    const id = openVault();
+    const tiers = { smallMaxCents: 2000, mediumMaxCents: 10000, largeShareOfVault: 0.25, strictMode: true };
+    as("ben");
+    expect(store().updateVaultTiers(id, tiers).ok).toBe(false);
+    as("amy");
+    expect(store().updateVaultTiers(id, tiers).ok).toBe(true);
+    expect(vaultOf(id).tiers.strictMode).toBe(true);
+    const told = store().notifications.filter((n) => n.title.endsWith("approval rules changed")).map((n) => n.toId);
+    expect(told.sort()).toEqual(["amy", "ben", "cal"]);
+  });
+
+  it("warns about an inactive vault, then releases reserves unless extended (US-14)", () => {
+    const id = openVault();
+    as("cal");
+    store().giveDebitConsent();
+    store().reserve(id, 20000);
+    expect(store().accounts.cal.bankCents).toBe(75000);
+
+    store().advanceClock(14 * 24);
+    expect(vaultOf(id).inactivityNoticeAt).toBeDefined();
+    store().extendVault(id);
+    expect(vaultOf(id).inactivityNoticeAt).toBeUndefined();
+
+    store().advanceClock(14 * 24); // idle again -> notice
+    store().advanceClock(3 * 24); // notice runs out -> released
+    expect(vaultOf(id).status).toBe("closed");
+    expect(store().accounts.cal.bankCents).toBe(95000);
+  });
+});
+
+describe("US-21: claim from vault", () => {
+  it("pays the claimant back pro rata from every reserve, including their own", () => {
+    as("amy");
+    const v = store().createVault({ groupId: "g-bali", name: "Bali", targetCents: 30000, endDate: "2099-01-01T00:00:00Z" });
+    const vaultId = v.ok ? v.value : "";
+    for (const id of ["amy", "ben", "cal"]) {
+      as(id);
+      store().giveDebitConsent();
+      store().reserve(vaultId, 10000);
+    }
+    as("ben");
+    const before = store().accounts.ben.bankCents;
+    const r = store().requestSpend(vaultId, { kind: "claim", merchant: "Klook tickets", amountCents: 3000 });
+    expect(r.ok && r.value.tier).toBe("small");
+    expect(store().accounts.ben.bankCents).toBe(before + 3000);
+    expect(store().vaults.find((x) => x.id === vaultId)!.reservations).toEqual({ amy: 9000, ben: 9000, cal: 9000 });
   });
 });

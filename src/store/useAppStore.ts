@@ -66,6 +66,10 @@ export interface AppState {
   reminderOptOut: Record<string, boolean>;
   /** Payees each member has paid before, for the first-time payee warning (US-15). */
   knownPayees: Record<MemberId, MemberId[]>;
+  /** US-10 / Section 7.3: when each member gave the one-time debit authorisation for vault reserves. */
+  debitConsent: Record<MemberId, ISODate>;
+  /** US-18: separate marketing opt-in. Off by default and independent of feature consent. */
+  marketingOptIn: Record<MemberId, boolean>;
 
   // demo controls
   now: () => ISODate;
@@ -105,6 +109,13 @@ export interface AppState {
   rejectSpend: (spendId: string) => ActionResult<VaultSpend>;
   expireStaleSpends: () => void;
   closeVault: (vaultId: string) => ActionResult<undefined>;
+  updateVaultTiers: (vaultId: string, tiers: TierConfig) => ActionResult<undefined>;
+  extendVault: (vaultId: string) => ActionResult<undefined>;
+  checkInactiveVaults: () => void;
+
+  // consent and privacy (US-10, US-18)
+  giveDebitConsent: () => void;
+  setMarketingOptIn: (optedIn: boolean) => void;
 
   markAllRead: () => void;
 }
@@ -128,6 +139,8 @@ function initialData() {
     reminderLog: {} as Record<string, ReminderLog>,
     reminderOptOut: {} as Record<string, boolean>,
     knownPayees: {} as Record<MemberId, MemberId[]>,
+    debitConsent: {} as Record<MemberId, ISODate>,
+    marketingOptIn: {} as Record<MemberId, boolean>,
     lastSource: {} as Record<MemberId, "paylah" | "bank">,
   };
 }
@@ -147,11 +160,25 @@ export const useAppStore = create<AppState>()(
       const vaultOf = (id: string) => get().vaults.find((v) => v.id === id);
       const name = (id: MemberId) => get().members[id]?.displayName.split(" ")[0] ?? id;
 
+      /** US-14: close a vault and release every unspent reserve to its owner. */
+      const releaseVault = (vault: Vault, reason: string) => {
+        const { vault: closed, released } = V.closeVault(vault);
+        set((s) => {
+          const accounts = { ...s.accounts };
+          for (const [id, amt] of Object.entries(released)) accounts[id] = { ...accounts[id], bankCents: accounts[id].bankCents + amt };
+          return { accounts, vaults: s.vaults.map((v) => (v.id === vault.id ? closed : v)) };
+        });
+        for (const [id, amt] of Object.entries(released)) {
+          notify([id], `${vault.name} closed`, `${reason} ${formatSGD(amt)} was released back to your available balance.`);
+        }
+      };
+
       /** Apply an executed spend: update vault, debit reserved money, log it in the ledger. */
       const commitExecutedSpend = (vault: Vault, spend: VaultSpend) => {
         const res = V.executeSpend(vault, spend);
         if (!res.ok) return res;
-        const { vault: newVault, spend: done } = res.value;
+        const { spend: done } = res.value;
+        const newVault = V.touchVault(res.value.vault, get().now());
         const group = groupOf(vault.groupId)!;
         const expense: Expense = {
           id: uid("e"),
@@ -201,6 +228,7 @@ export const useAppStore = create<AppState>()(
           set((s) => ({ clockOffsetHours: s.clockOffsetHours + hours }));
           get().expireStaleSpends();
           get().runReminders();
+          get().checkInactiveVaults();
         },
         resetDemo: () => set(initialData()),
 
@@ -376,11 +404,13 @@ export const useAppStore = create<AppState>()(
           const me = get().currentUserId;
           const vault = vaultOf(vaultId);
           if (!vault) return fail("Vault not found.");
+          if (!get().debitConsent[me]) return fail("Agree to the one-time debit authorisation first. Nothing was held.");
           const acct = get().accounts[me];
           const r = V.reserve(vault, me, amountCents, acct.bankCents);
           if (!r.ok) return r;
+          const touched = V.touchVault(r.value, get().now());
           set((s) => ({
-            vaults: s.vaults.map((v) => (v.id === vaultId ? r.value : v)),
+            vaults: s.vaults.map((v) => (v.id === vaultId ? touched : v)),
             accounts: { ...s.accounts, [me]: { ...acct, bankCents: acct.bankCents - amountCents } },
           }));
           const group = groupOf(vault.groupId)!;
@@ -458,17 +488,61 @@ export const useAppStore = create<AppState>()(
           const vault = vaultOf(vaultId);
           if (!vault) return fail("Vault not found.");
           if (vault.adminId !== me) return fail("Only the vault admin can close it.");
-          const { vault: closed, released } = V.closeVault(vault);
-          set((s) => {
-            const accounts = { ...s.accounts };
-            for (const [id, amt] of Object.entries(released)) accounts[id] = { ...accounts[id], bankCents: accounts[id].bankCents + amt };
-            return { accounts, vaults: s.vaults.map((v) => (v.id === vaultId ? closed : v)) };
-          });
-          for (const [id, amt] of Object.entries(released)) {
-            notify([id], `${vault.name} closed`, `${formatSGD(amt)} was released back to your available balance.`);
-          }
+          if (vault.status !== "open") return fail("This vault is already closed.");
+          releaseVault(vault, `${name(me)} closed the vault.`);
           return ok(undefined);
         },
+
+        updateVaultTiers: (vaultId, tiers) => {
+          const me = get().currentUserId;
+          const vault = vaultOf(vaultId);
+          if (!vault) return fail("Vault not found.");
+          if (vault.adminId !== me) return fail("Only the vault admin can change the approval rules.");
+          const r = V.updateTiers(vault, tiers);
+          if (!r.ok) return r;
+          const updated = V.touchVault(r.value, get().now());
+          set((s) => ({ vaults: s.vaults.map((v) => (v.id === vaultId ? updated : v)) }));
+          const rules = tiers.strictMode
+            ? "Strict mode is on: every member approves every spend."
+            : `Under ${formatSGD(tiers.smallMaxCents)} instant; up to ${formatSGD(tiers.mediumMaxCents)} one approval; above that or over ${Math.round(tiers.largeShareOfVault * 100)}% of the vault, a majority.`;
+          notify(acceptedMemberIds(groupOf(vault.groupId)!), `${vault.name}: approval rules changed`, `${name(me)} updated the rules. ${rules}`, `/groups/${vault.groupId}/vault`);
+          return ok(undefined);
+        },
+
+        extendVault: (vaultId) => {
+          const me = get().currentUserId;
+          const vault = vaultOf(vaultId);
+          if (!vault) return fail("Vault not found.");
+          if (vault.status !== "open") return fail("This vault is closed.");
+          const group = groupOf(vault.groupId)!;
+          if (group.members[me]?.status !== "accepted") return fail("Only group members can extend the vault.");
+          set((s) => ({ vaults: s.vaults.map((v) => (v.id === vaultId ? V.touchVault(v, get().now()) : v)) }));
+          notify(acceptedMemberIds(group), `${vault.name} kept open`, `${name(me)} extended the vault. Reserves stay in place.`, `/groups/${vault.groupId}/vault`);
+          return ok(undefined);
+        },
+
+        checkInactiveVaults: () => {
+          const now = get().now();
+          for (const vault of get().vaults) {
+            const action = V.inactivityAction(vault, now);
+            if (action === "none") continue;
+            const group = groupOf(vault.groupId)!;
+            if (action === "notify") {
+              set((s) => ({ vaults: s.vaults.map((v) => (v.id === vault.id ? { ...v, inactivityNoticeAt: now } : v)) }));
+              notify(
+                acceptedMemberIds(group),
+                `${vault.name} will close soon`,
+                `No activity for ${CONFIG.vaultInactiveDays} days. Unspent reserves are released in ${CONFIG.vaultReleaseNoticeDays} days unless someone extends the vault.`,
+                `/groups/${vault.groupId}/vault`,
+              );
+            } else {
+              releaseVault(vault, `It was inactive, so it closed automatically.`);
+            }
+          }
+        },
+
+        giveDebitConsent: () => set((s) => ({ debitConsent: { ...s.debitConsent, [s.currentUserId]: s.now() } })),
+        setMarketingOptIn: (optedIn) => set((s) => ({ marketingOptIn: { ...s.marketingOptIn, [s.currentUserId]: optedIn } })),
 
         markAllRead: () =>
           set((s) => ({ notifications: s.notifications.map((n) => (n.toId === s.currentUserId ? { ...n, read: true } : n)) })),
