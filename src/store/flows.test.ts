@@ -193,3 +193,35 @@ describe("US-21: claim from vault", () => {
     expect(store().vaults.find((x) => x.id === vaultId)!.reservations).toEqual({ amy: 9000, ben: 9000, cal: 9000 });
   });
 });
+
+describe("US-17: settle everything at once", () => {
+  const owesTwo = () => {
+    // Ben pays $100 for Cal, so after netting Cal owes Amy $170 and Ben $60.
+    as("ben");
+    store().addExpense({ groupId: "g-bali", title: "Scooter rental", totalCents: 10000, shares: { cal: 10000 }, source: "manual" });
+    as("cal");
+  };
+
+  it("pays every creditor in one go and returns references", async () => {
+    owesTwo();
+    const r = await store().settleAll("g-bali", "bank");
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.value.map((p) => p.status)).toEqual(["success", "success"]);
+    expect(r.value.every((p) => p.reference?.startsWith("DEMO-"))).toBe(true);
+    expect(bali().cal).toBe(0);
+  });
+
+  it("keeps going when one payment fails and flags it", async () => {
+    owesTwo();
+    // $70 in PayLah!: enough for Ben's $60, not Amy's $170.
+    useAppStore.setState({ accounts: { ...store().accounts, cal: { ...store().accounts.cal, paylahCents: 7000 } } });
+    const r = await store().settleAll("g-bali", "paylah");
+    if (!r.ok) throw new Error(r.error);
+    const failed = r.value.filter((p) => p.status === "failed");
+    const paid = r.value.filter((p) => p.status === "success");
+    expect(failed).toHaveLength(1);
+    expect(failed[0].error).toMatch(/not charged/);
+    expect(paid).toHaveLength(1);
+  });
+});

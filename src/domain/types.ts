@@ -59,6 +59,10 @@ export interface Payment {
   status: PaymentStatus;
   source: "paylah" | "bank";
   createdAt: ISODate;
+  /** PayNow reference, shown on the receipt (US-15). */
+  reference?: string;
+  /** Why it failed, e.g. "You were not charged" (US-15, US-17). */
+  error?: string;
 }
 
 /** A suggested transfer produced by the netting engine (US-08). */
