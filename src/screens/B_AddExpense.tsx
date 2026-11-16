@@ -1,7 +1,7 @@
-import { Camera, CreditCard, Loader2 } from "lucide-react";
+import { Camera, CreditCard, Loader2, PenLine } from "lucide-react";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Banner, Card, Money, Screen, SectionTitle, TodoPanel } from "../components/ui";
+import { Avatar, Banner, Button, Card, Money, Screen, SectionTitle, Sheet, TodoPanel } from "../components/ui";
 import { SAMPLE_RECEIPTS } from "../data/sampleReceipts";
 import { equalSplit } from "../domain/receiptSplit";
 import { receiptParser } from "../services/receiptParser";
@@ -24,6 +24,9 @@ export function AddExpense() {
   const startManual = useDraftStore((s) => s.startManual);
   const [scanning, setScanning] = useState(false);
   const [error, setError] = useState<string>();
+  const [importing, setImporting] = useState<{ txnId: string; included: string[] }>();
+  const members = useAppStore((s) => s.members);
+  const me = useAppStore((s) => s.currentUserId);
 
   if (!view) return null;
 
@@ -55,19 +58,23 @@ export function AddExpense() {
     }
   };
 
-  const importTxn = (txnId: string) => {
+  // US-07: confirm merchant, date and amount, and choose who's included, before an equal split.
+  const importTxn = (txnId: string, included: string[]) => {
     const t = txns.find((x) => x.id === txnId)!;
     const r = addExpense({
       groupId,
       title: t.merchant,
       totalCents: t.amountCents,
-      shares: equalSplit(t.amountCents, view.memberIds),
+      shares: equalSplit(t.amountCents, included),
       source: "card",
       cardTxnId: t.id,
     });
+    setImporting(undefined);
     if (!r.ok) return setError(r.error);
     navigate(`/groups/${groupId}`);
   };
+  const pending = importing && txns.find((x) => x.id === importing.txnId);
+  const preview = pending && importing.included.length > 0 ? equalSplit(pending.amountCents, importing.included) : {};
 
   return (
     <Screen title="Add expense" back={`/groups/${groupId}`}>
@@ -92,13 +99,22 @@ export function AddExpense() {
           ))}
         </div>
       </Card>
+      <Button
+        variant="secondary"
+        onClick={() => {
+          startManual(groupId);
+          navigate(`/groups/${groupId}/assign`);
+        }}
+      >
+        <PenLine size={16} /> No receipt? Enter items by hand
+      </Button>
 
       {error && <Banner tone="error">{error}</Banner>}
 
       <SectionTitle>Or import a card payment</SectionTitle>
       {txns.length === 0 && <Banner>No DBS card payments in the last 30 days.</Banner>}
       {txns.map((t) => (
-        <Card key={t.id} onClick={t.alreadyAddedOn ? undefined : () => importTxn(t.id)} className={t.alreadyAddedOn ? "opacity-60" : ""}>
+        <Card key={t.id} onClick={t.alreadyAddedOn ? undefined : () => setImporting({ txnId: t.id, included: view.memberIds })} className={t.alreadyAddedOn ? "opacity-60" : ""}>
           <div className="flex items-center gap-3">
             <CreditCard size={18} className="text-muted" />
             <div className="min-w-0 flex-1">
@@ -118,13 +134,45 @@ export function AddExpense() {
         owner="#3 Discovery Lead"
         stories="US-04, US-07"
         items={[
-          "Camera viewfinder UI with framing guide (mobile)",
-          "Choose who is included before an equal card split (today: all members)",
-          "Confirm sheet showing merchant, date, amount before importing",
-          "Manual entry button for receipts without a photo",
+          "Camera viewfinder UI with framing guide (mobile); today the photo button opens the phone's own camera",
           "Optional: plug a real OCR model into services/receiptParser.ts",
         ]}
       />
+
+      {pending && importing && (
+        <Sheet title="Split this card payment?" onClose={() => setImporting(undefined)}>
+          <Card className="bg-surface">
+            <p className="font-semibold">{pending.merchant}</p>
+            <p className="text-xs text-muted">
+              {new Date(pending.date).toLocaleDateString("en-SG", { day: "numeric", month: "short", year: "numeric" })} · {pending.cardLabel}
+            </p>
+            <Money cents={pending.amountCents} className="mt-1 block text-2xl font-bold" />
+          </Card>
+          <p className="text-sm font-medium">Who's included? Split equally</p>
+          {view.memberIds.map((id) => {
+            const on = importing.included.includes(id);
+            return (
+              <label key={id} className="flex items-center gap-3 text-sm">
+                <input
+                  type="checkbox"
+                  className="h-5 w-5 accent-brand"
+                  checked={on}
+                  onChange={() =>
+                    setImporting({ ...importing, included: on ? importing.included.filter((x) => x !== id) : [...importing.included, id] })
+                  }
+                />
+                <Avatar member={members[id]} size={26} />
+                <span className="flex-1">{id === me ? "You" : members[id].displayName.split(" ")[0]}</span>
+                {on && <Money cents={preview[id] ?? 0} className="font-semibold" />}
+              </label>
+            );
+          })}
+          <p className="text-xs text-muted">Your group sees only the merchant, date and amount, never your card number.</p>
+          <Button disabled={importing.included.length === 0} onClick={() => importTxn(importing.txnId, importing.included)}>
+            Add to {view.group.name}
+          </Button>
+        </Sheet>
+      )}
     </Screen>
   );
 }
