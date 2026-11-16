@@ -1,9 +1,10 @@
-import { Lock, QrCode, ShieldCheck } from "lucide-react";
+import { AlertTriangle, Lock, QrCode, ShieldCheck, SlidersHorizontal } from "lucide-react";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Avatar, Banner, Button, Card, Field, Money, Screen, SectionTitle, TodoPanel, inputClass } from "../components/ui";
+import { Avatar, Banner, Button, Card, Field, Money, Screen, SectionTitle, Sheet, ToggleRow, inputClass } from "../components/ui";
+import { CONFIG } from "../domain/config";
 import { formatSGD, toCents } from "../domain/money";
-import type { VaultSpend } from "../domain/types";
+import type { TierConfig, Vault, VaultSpend } from "../domain/types";
 import { useGroupView, useMe, useVaultSpends } from "../store/selectors";
 import { useAppStore } from "../store/useAppStore";
 
@@ -69,8 +70,11 @@ function OpenVault({ groupId }: { groupId: string }) {
   const approve = useAppStore((s) => s.approveSpend);
   const reject = useAppStore((s) => s.rejectSpend);
   const closeVault = useAppStore((s) => s.closeVault);
+  const extendVault = useAppStore((s) => s.extendVault);
+  const consentedAt = useAppStore((s) => s.debitConsent[me]);
+  const giveDebitConsent = useAppStore((s) => s.giveDebitConsent);
   const [amount, setAmount] = useState("500");
-  const [consented, setConsented] = useState(false);
+  const [sheet, setSheet] = useState<"consent" | "rules">();
   const [message, setMessage] = useState<{ tone: "error" | "success"; text: string }>();
 
   const total = view.vaultTotalCents;
@@ -81,6 +85,8 @@ function OpenVault({ groupId }: { groupId: string }) {
   const first = (id: string) => (id === me ? "You" : members[id].displayName.split(" ")[0]);
 
   const doReserve = () => {
+    // US-10: the one-time debit authorisation comes before the first reservation.
+    if (!consentedAt) return setSheet("consent");
     try {
       const r = reserve(vault.id, toCents(amount));
       setMessage(r.ok ? { tone: "success", text: `${formatSGD(toCents(amount))} reserved. It stays in your account.` } : { tone: "error", text: r.error });
@@ -104,6 +110,23 @@ function OpenVault({ groupId }: { groupId: string }) {
         </p>
       </Card>
 
+      {vault.inactivityNoticeAt && (
+        <Banner tone="warn">
+          <AlertTriangle size={16} className="mr-1 inline" />
+          No activity for {CONFIG.vaultInactiveDays} days. Unspent reserves go back to everyone on{" "}
+          {new Date(Date.parse(vault.inactivityNoticeAt) + CONFIG.vaultReleaseNoticeDays * 86_400_000).toLocaleDateString("en-SG", { day: "numeric", month: "short" })} unless
+          someone keeps the vault open.
+          <Button variant="secondary" className="mt-2 w-full py-2" onClick={() => extendVault(vault.id)}>
+            Keep vault open
+          </Button>
+        </Banner>
+      )}
+      {vault.lowAlertSent && total < vault.targetCents * CONFIG.lowVaultThreshold && (
+        <Banner tone="warn">
+          Running low: <Money cents={total} /> left, under {Math.round(CONFIG.lowVaultThreshold * 100)}% of the target. Reserve more before the next spend.
+        </Banner>
+      )}
+
       <SectionTitle>Reserves</SectionTitle>
       <Card className="flex flex-col gap-2">
         {view.memberIds.map((id) => (
@@ -125,14 +148,13 @@ function OpenVault({ groupId }: { groupId: string }) {
         </p>
         <div className="mt-2 flex gap-2">
           <input className={inputClass} inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} aria-label="Amount to reserve" />
-          <Button disabled={!consented} onClick={doReserve}>
-            Reserve
-          </Button>
+          <Button onClick={doReserve}>Reserve</Button>
         </div>
-        <label className="mt-2 flex items-start gap-2 text-xs text-muted">
-          <input type="checkbox" className="mt-0.5 accent-brand" checked={consented} onChange={(e) => setConsented(e.target.checked)} />
-          I allow DBS to debit my reserved amount only for spends this group approves. Unspent money is released when the vault closes.
-        </label>
+        <p className="mt-2 text-xs text-muted">
+          {consentedAt
+            ? "Debit authorisation given. DBS debits your reserve only for spends the group approves."
+            : "First time? We'll ask you to authorise group-approved debits once."}
+        </p>
         {message && <div className="mt-2"><Banner tone={message.tone}>{message.text}</Banner></div>}
       </Card>
 
@@ -173,12 +195,27 @@ function OpenVault({ groupId }: { groupId: string }) {
       ))}
 
       <Card className="text-xs text-muted">
-        <p className="font-semibold text-ink">Approval rules</p>
-        <p>Under {formatSGD(vault.tiers.smallMaxCents)}: instant, everyone alerted.</p>
-        <p>
-          {formatSGD(vault.tiers.smallMaxCents)}–{formatSGD(vault.tiers.mediumMaxCents)}: one other member approves.
-        </p>
-        <p>Over {formatSGD(vault.tiers.mediumMaxCents)} or 25% of the vault: majority.</p>
+        <div className="flex items-center justify-between">
+          <p className="font-semibold text-ink">Approval rules</p>
+          {vault.adminId === me && (
+            <button className="flex items-center gap-1 font-semibold text-brand" onClick={() => setSheet("rules")}>
+              <SlidersHorizontal size={14} /> Edit
+            </button>
+          )}
+        </div>
+        {vault.tiers.strictMode ? (
+          <p>Strict mode: every member approves every spend.</p>
+        ) : (
+          <>
+            <p>Under {formatSGD(vault.tiers.smallMaxCents)}: instant, everyone alerted.</p>
+            <p>
+              {formatSGD(vault.tiers.smallMaxCents)}–{formatSGD(vault.tiers.mediumMaxCents)}: one other member approves.
+            </p>
+            <p>
+              Over {formatSGD(vault.tiers.mediumMaxCents)} or {Math.round(vault.tiers.largeShareOfVault * 100)}% of the vault: majority.
+            </p>
+          </>
+        )}
       </Card>
 
       {vault.adminId === me && (
@@ -187,16 +224,26 @@ function OpenVault({ groupId }: { groupId: string }) {
         </Button>
       )}
 
-      <TodoPanel
-        owner="#5 GTM & Governance Lead"
-        stories="US-09–14, US-18"
-        items={[
-          "Replace the consent checkbox with a one-time consent sheet (debit authorisation, Section 7.3) shown before a member's first reservation",
-          "Edit approval tiers and strict mode (all members notified of changes)",
-          "'Vault running low' and inactivity banners (US-13, US-14)",
-          "Marketing opt-in toggle, separate from feature consent (US-18)",
-        ]}
-      />
+      <p className="px-1 text-center text-xs text-muted">
+        Offers based on your vaults are off unless you opt in.{" "}
+        <button className="font-semibold text-brand" onClick={() => navigate("/privacy")}>
+          Privacy settings
+        </button>
+      </p>
+
+      {sheet === "consent" && (
+        <DebitConsentSheet
+          vaultName={vault.name}
+          onCancel={() => setSheet(undefined)}
+          onAgree={() => {
+            giveDebitConsent();
+            setSheet(undefined);
+            const r = reserve(vault.id, toCents(amount));
+            setMessage(r.ok ? { tone: "success", text: `${formatSGD(toCents(amount))} reserved. It stays in your account.` } : { tone: "error", text: r.error });
+          }}
+        />
+      )}
+      {sheet === "rules" && <RulesSheet vault={vault} onClose={() => setSheet(undefined)} />}
     </Screen>
   );
 }
@@ -234,5 +281,78 @@ function PendingSpend({
         </div>
       )}
     </Card>
+  );
+}
+
+/** US-10 / Section 7.3: one-time debit authorisation, shown before a member's first reservation. */
+function DebitConsentSheet({ vaultName, onAgree, onCancel }: { vaultName: string; onAgree: () => void; onCancel: () => void }) {
+  return (
+    <Sheet title="Authorise group-approved debits" onClose={onCancel}>
+      <p className="text-sm text-muted">You only need to do this once for GroupVault.</p>
+      <ul className="flex flex-col gap-2 text-sm">
+        <li>
+          <span className="font-medium">Your money stays in your own account.</span> Reserving moves it from available to reserved in your DBS/POSB
+          account. Nobody else holds it, including the vault admin.
+        </li>
+        <li>
+          <span className="font-medium">DBS debits it only for spends your group approves,</span> such as {vaultName} payments, following the
+          vault's approval rules. You're alerted every time.
+        </li>
+        <li>
+          <span className="font-medium">Unspent money comes back.</span> When the vault closes, or after it's inactive for {CONFIG.vaultInactiveDays} days and
+          nobody keeps it open, your remaining reserve is released.
+        </li>
+        <li>
+          <span className="font-medium">You can withdraw this consent</span> by leaving the group's vaults. Reserves come from your bank account, not your
+          PayLah! wallet.
+        </li>
+      </ul>
+      <p className="text-xs text-muted">This doesn't sign you up for marketing. That's a separate choice in Privacy settings.</p>
+      <Button onClick={onAgree}>I agree, reserve my share</Button>
+      <Button variant="secondary" onClick={onCancel}>
+        Not now
+      </Button>
+    </Sheet>
+  );
+}
+
+/** US-12: admin edits approval tiers or turns on strict mode; every member is notified. */
+function RulesSheet({ vault, onClose }: { vault: Vault; onClose: () => void }) {
+  const update = useAppStore((s) => s.updateVaultTiers);
+  const [small, setSmall] = useState((vault.tiers.smallMaxCents / 100).toString());
+  const [medium, setMedium] = useState((vault.tiers.mediumMaxCents / 100).toString());
+  const [share, setShare] = useState(Math.round(vault.tiers.largeShareOfVault * 100).toString());
+  const [strict, setStrict] = useState(vault.tiers.strictMode);
+  const [error, setError] = useState<string>();
+
+  const save = () => {
+    try {
+      const tiers: TierConfig = { smallMaxCents: toCents(small), mediumMaxCents: toCents(medium), largeShareOfVault: Number(share) / 100, strictMode: strict };
+      const r = update(vault.id, tiers);
+      if (!r.ok) return setError(r.error);
+      onClose();
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  };
+
+  return (
+    <Sheet title="Approval rules" onClose={onClose}>
+      <ToggleRow label="Strict mode" hint="Every member approves every spend, whatever the amount." checked={strict} onChange={setStrict} />
+      <fieldset disabled={strict} className="flex flex-col gap-3 disabled:opacity-50">
+        <Field label="Instant below (S$)" hint="No approval needed; everyone is alerted.">
+          <input className={inputClass} inputMode="decimal" value={small} onChange={(e) => setSmall(e.target.value)} />
+        </Field>
+        <Field label="One approval up to (S$)">
+          <input className={inputClass} inputMode="decimal" value={medium} onChange={(e) => setMedium(e.target.value)} />
+        </Field>
+        <Field label="Majority above this share of the vault (%)">
+          <input className={inputClass} inputMode="numeric" value={share} onChange={(e) => setShare(e.target.value)} />
+        </Field>
+      </fieldset>
+      <p className="text-xs text-muted">Every member is notified when the rules change.</p>
+      {error && <Banner tone="error">{error}</Banner>}
+      <Button onClick={save}>Save rules</Button>
+    </Sheet>
   );
 }

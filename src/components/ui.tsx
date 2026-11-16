@@ -138,3 +138,38 @@ export function TodoPanel({ owner, stories, items }: { owner: string; stories: s
     </div>
   );
 }
+
+/**
+ * Bottom sheet inside the phone frame, for consent and confirmation steps.
+ * Rendered over the whole screen; tapping the backdrop or Escape closes it.
+ */
+export function Sheet({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
+  return (
+    <div className="absolute inset-0 z-30 flex items-end bg-black/40" onClick={onClose} onKeyDown={(e) => e.key === "Escape" && onClose()} role="presentation">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        className="no-scrollbar flex max-h-[85%] w-full flex-col gap-3 overflow-y-auto rounded-t-3xl bg-white p-5 pb-6"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <span className="mx-auto h-1 w-10 rounded-full bg-line" aria-hidden />
+        <h2 className="text-base font-semibold">{title}</h2>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/** On/off switch row used for consent and settings. */
+export function ToggleRow({ label, hint, checked, onChange }: { label: string; hint?: string; checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <label className="flex items-center justify-between gap-3 rounded-xl bg-white px-4 py-3 text-sm">
+      <span>
+        {label}
+        {hint && <span className="block text-xs text-muted">{hint}</span>}
+      </span>
+      <input type="checkbox" role="switch" className="h-5 w-5 shrink-0 accent-brand" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+    </label>
+  );
+}

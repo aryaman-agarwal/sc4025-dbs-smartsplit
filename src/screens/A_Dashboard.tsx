@@ -1,4 +1,4 @@
-import { Plus, Users, PiggyBank as VaultIcon } from "lucide-react";
+import { Plus, ShieldCheck, Users, PiggyBank as VaultIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Avatar, Banner, Button, Card, Money, PositionLabel, Screen, SectionTitle } from "../components/ui";
 import { netBalances } from "../domain/settlement";
@@ -24,7 +24,14 @@ export function Dashboard() {
   const joined = groups.filter((g) => g.members[me]?.status === "accepted");
 
   return (
-    <Screen title="SmartSplit">
+    <Screen
+      title="SmartSplit"
+      action={
+        <button aria-label="Privacy" onClick={() => navigate("/privacy")} className="rounded-full p-1.5 hover:bg-neutral-100">
+          <ShieldCheck size={20} />
+        </button>
+      }
+    >
       <Card className="bg-gradient-to-br from-brand to-brand-dark text-white">
         <p className="text-sm opacity-90">Hi {member.displayName.split(" ")[0]}</p>
         <p className="mt-2 text-xs opacity-80">Available in savings account</p>
