@@ -70,6 +70,8 @@ export interface AppState {
   debitConsent: Record<MemberId, ISODate>;
   /** US-18: separate marketing opt-in. Off by default and independent of feature consent. */
   marketingOptIn: Record<MemberId, boolean>;
+  /** Section 7.5: when each member allowed contact matching for invites. */
+  contactsConsent: Record<MemberId, ISODate>;
 
   // demo controls
   now: () => ISODate;
@@ -117,6 +119,7 @@ export interface AppState {
   // consent and privacy (US-10, US-18)
   giveDebitConsent: () => void;
   setMarketingOptIn: (optedIn: boolean) => void;
+  giveContactsConsent: () => void;
 
   markAllRead: () => void;
 }
@@ -142,6 +145,7 @@ function initialData() {
     knownPayees: {} as Record<MemberId, MemberId[]>,
     debitConsent: {} as Record<MemberId, ISODate>,
     marketingOptIn: {} as Record<MemberId, boolean>,
+    contactsConsent: {} as Record<MemberId, ISODate>,
     lastSource: {} as Record<MemberId, "paylah" | "bank">,
   };
 }
@@ -544,6 +548,7 @@ export const useAppStore = create<AppState>()(
         },
 
         giveDebitConsent: () => set((s) => ({ debitConsent: { ...s.debitConsent, [s.currentUserId]: s.now() } })),
+        giveContactsConsent: () => set((s) => ({ contactsConsent: { ...s.contactsConsent, [s.currentUserId]: s.now() } })),
         setMarketingOptIn: (optedIn) => set((s) => ({ marketingOptIn: { ...s.marketingOptIn, [s.currentUserId]: optedIn } })),
 
         markAllRead: () =>

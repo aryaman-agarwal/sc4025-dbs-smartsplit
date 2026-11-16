@@ -225,3 +225,41 @@ describe("US-17: settle everything at once", () => {
     expect(paid).toHaveLength(1);
   });
 });
+
+describe("US-02: consent to join", () => {
+  const newGroup = () => {
+    as("amy");
+    const r = store().createGroup("Hall supper", ["ben", "dee"]);
+    return r.ok ? r.value : "";
+  };
+
+  it("keeps invitees pending and out of splits until they accept", () => {
+    const id = newGroup();
+    const r = store().addExpense({ groupId: id, title: "Supper", totalCents: 3000, shares: { amy: 1000, ben: 1000, dee: 1000 }, source: "manual" });
+    expect(r).toEqual({ ok: false, error: "Splits can only include members who have joined." });
+  });
+
+  it("sends no vault request to someone who hasn't accepted", () => {
+    const id = newGroup();
+    store().createVault({ groupId: id, name: "Supper fund", targetCents: 10000, endDate: "2099-01-01T00:00:00Z" });
+    expect(store().notifications.some((n) => n.toId === "ben" && n.title.includes("created Supper fund"))).toBe(false);
+  });
+
+  it("removes a member who declines, with no shares left behind", () => {
+    const id = newGroup();
+    as("ben");
+    store().respondToInvite(id, false);
+    const g = store().groups.find((x) => x.id === id)!;
+    expect(g.members.ben).toBeUndefined();
+    expect(store().expenses.some((e) => e.groupId === id && e.shares.ben)).toBe(false);
+  });
+
+  it("lets an accepted member be split with", () => {
+    const id = newGroup();
+    as("ben");
+    store().respondToInvite(id, true);
+    as("amy");
+    const r = store().addExpense({ groupId: id, title: "Supper", totalCents: 2000, shares: { amy: 1000, ben: 1000 }, source: "manual" });
+    expect(r.ok).toBe(true);
+  });
+});

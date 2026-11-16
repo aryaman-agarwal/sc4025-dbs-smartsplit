@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Route, Routes } from "react-router-dom";
 import { DemoToolbar } from "./components/DemoToolbar";
+import { NotificationToast } from "./components/NotificationToast";
 import { PhoneFrame } from "./components/PhoneFrame";
 import { useAppStore } from "./store/useAppStore";
 import { Dashboard } from "./screens/A_Dashboard";
@@ -37,6 +38,7 @@ export default function App() {
     <div className="flex min-h-full flex-col items-center gap-4 px-4 py-6">
       <DemoToolbar />
       <PhoneFrame>
+        <NotificationToast />
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/inbox" element={<Inbox />} />
