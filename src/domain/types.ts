@@ -101,6 +101,10 @@ export interface Vault {
   tiers: TierConfig;
   createdAt: ISODate;
   lowAlertSent: boolean;
+  /** Last reservation, spend or rule change (US-14). Falls back to createdAt. */
+  lastActivityAt?: ISODate;
+  /** Set when members were told an inactive vault will close (US-14). */
+  inactivityNoticeAt?: ISODate;
 }
 
 export type SpendKind = "pay" | "claim";
