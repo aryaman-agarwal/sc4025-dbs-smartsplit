@@ -17,6 +17,8 @@ export function Settlement() {
   if (!view) return null;
 
   const { transfers, rawDebts } = view;
+  const mine = transfers.filter((t) => t.fromId === me);
+  const myTotal = mine.reduce((a, t) => a + t.amountCents, 0);
   const first = (id: string) => (id === me ? "You" : members[id].displayName.split(" ")[0]);
 
   return (
@@ -31,6 +33,18 @@ export function Settlement() {
           {rawDebts} {rawDebts === 1 ? "debt" : "debts"} → <strong>{transfers.length} {transfers.length === 1 ? "payment" : "payments"}</strong>. We netted
           everything so money doesn't move in circles.
         </Banner>
+      )}
+
+      {mine.length > 1 && (
+        <Card className="ring-2 ring-brand/40">
+          <p className="text-sm">
+            You owe {mine.length} people <Money cents={myTotal} className="font-semibold" />
+          </p>
+          <Button className="mt-3 w-full" onClick={() => navigate(`/groups/${groupId}/settle/confirm?all=1`)}>
+            Settle everything · <Money cents={myTotal} />
+          </Button>
+          <p className="mt-2 text-center text-xs text-muted">One confirmation, one approval</p>
+        </Card>
       )}
 
       {transfers.length > 0 && <SectionTitle>Payments</SectionTitle>}
@@ -60,12 +74,8 @@ export function Settlement() {
 
       <TodoPanel
         owner="#1 MVP Engineer"
-        stories="US-17"
-        items={[
-          "'Settle everything' button when I owe several people: one confirmation, one authentication (store.settleAll is ready)",
-          "Flag any payment that fails while the others complete",
-          "Animate the netting ('6 debts → 2 payments') for the video",
-        ]}
+        stories="US-08"
+        items={["Animate the netting ('6 debts → 2 payments') for the video"]}
       />
     </Screen>
   );

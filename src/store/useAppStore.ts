@@ -93,6 +93,7 @@ export interface AppState {
 
   // settlement (US-15 to US-17)
   pay: (groupId: string, toId: MemberId, amountCents: Cents, source: "paylah" | "bank") => Promise<ActionResult<Payment>>;
+  /** US-17: pays everyone I owe in the group; one failure doesn't stop the others. Returns every attempt. */
   settleAll: (groupId: string, source: "paylah" | "bank") => Promise<ActionResult<Payment[]>>;
   setLastSource: (source: "paylah" | "bank") => void;
   lastSource: Record<MemberId, "paylah" | "bank">;
@@ -312,6 +313,7 @@ export const useAppStore = create<AppState>()(
             source,
             status: result.ok ? "success" : "failed",
             createdAt: get().now(),
+            ...(result.ok ? { reference: result.reference } : { error: result.error }),
           };
           set((s) => ({ payments: [...s.payments, payment], lastSource: { ...s.lastSource, [me]: source } }));
           if (!result.ok) return fail(result.error);
@@ -339,13 +341,13 @@ export const useAppStore = create<AppState>()(
             netBalances(ids, s.expenses.filter((e) => e.groupId === groupId), s.payments.filter((p) => p.groupId === groupId)),
           ).filter((t) => t.fromId === me);
           if (transfers.length === 0) return fail("You don't owe anyone in this group.");
-          const done: Payment[] = [];
-          // US-17: one failure doesn't stop the others; the open one stays flagged.
+          // US-17: one failure doesn't stop the others; the failed one stays open and is flagged.
+          const attempts: Payment[] = [];
           for (const t of transfers) {
-            const r = await get().pay(groupId, t.toId, t.amountCents, source);
-            if (r.ok) done.push(r.value);
+            await get().pay(groupId, t.toId, t.amountCents, source);
+            attempts.push(get().payments.at(-1)!);
           }
-          return ok(done);
+          return ok(attempts);
         },
 
         runReminders: () => {
