@@ -1,4 +1,6 @@
-import { Clock, RotateCcw } from "lucide-react";
+import { Clock, RotateCcw, Zap, ZapOff } from "lucide-react";
+import { useState } from "react";
+import { demoSettings } from "../services/payNow";
 import { useNavigate } from "react-router-dom";
 import { useAppStore } from "../store/useAppStore";
 import { Avatar } from "./ui";
@@ -7,6 +9,7 @@ import { Avatar } from "./ui";
  * Presenter controls that sit OUTSIDE the phone frame:
  * - switch between Amy, Ben, Cal and Dee to show both sides of a payment or approval
  * - move the demo clock forward to show reminders, expiry and cooling-off
+ * - make PayNow payments fail, to show "You were not charged" (US-15, US-17)
  * - reset all demo data
  */
 export function DemoToolbar() {
@@ -18,6 +21,7 @@ export function DemoToolbar() {
   const offset = useAppStore((s) => s.clockOffsetHours);
   const resetDemo = useAppStore((s) => s.resetDemo);
   const demoIds = ["amy", "ben", "cal", "dee"];
+  const [failing, setFailing] = useState(demoSettings.failureRate > 0);
 
   return (
     <div className="flex w-full max-w-[640px] flex-wrap items-center justify-center gap-2 rounded-2xl bg-white/80 px-3 py-2 text-xs shadow-sm backdrop-blur">
@@ -38,6 +42,17 @@ export function DemoToolbar() {
       <span className="mx-1 h-4 w-px bg-line" />
       <button onClick={() => advanceClock(24)} className="flex items-center gap-1 rounded-full px-2 py-1 hover:bg-neutral-100" title="Move the demo clock forward">
         <Clock size={14} /> +24h{offset ? ` (now +${offset}h)` : ""}
+      </button>
+      <button
+        onClick={() => {
+          demoSettings.failureRate = failing ? 0 : 1;
+          setFailing(!failing);
+        }}
+        className={`flex items-center gap-1 rounded-full px-2 py-1 ${failing ? "bg-brand-soft text-brand" : "hover:bg-neutral-100"}`}
+        title="Make every PayNow payment fail, to demo the error state"
+        aria-pressed={failing}
+      >
+        {failing ? <ZapOff size={14} /> : <Zap size={14} />} {failing ? "Payments failing" : "Fail payments"}
       </button>
       <button
         onClick={() => {
